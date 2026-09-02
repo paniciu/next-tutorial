@@ -5,6 +5,7 @@
 Acest fișier este sursa de adevăr pentru ce construim în proiectul **SkillForge**.
 
 Reguli:
+
 - Orice decizie de produs, schimbare de scop sau clarificare de cerințe se actualizează **mai întâi aici**, nu doar în conversație.
 - `README.md` rămâne scurt și trimite către acest document.
 - Instrucțiunile pentru agenți trebuie să fie aliniate cu acest document.
@@ -15,6 +16,7 @@ Reguli:
 SkillForge este o aplicație web online pentru dezvoltare profesională asistată de AI.
 
 Aplicația funcționează ca un **copilot personal de skills și carieră**:
+
 - cunoaște profilul real al utilizatorului;
 - răspunde în contextul acelui profil;
 - propune pași concreți de învățare;
@@ -28,6 +30,7 @@ SkillForge nu este gândit ca un simplu formular care trimite un prompt generic 
 SkillForge este pentru persoane care vor să crească profesional și au nevoie de direcție personalizată, nu de sfaturi generale.
 
 Exemple de utilizatori:
+
 - developer backend care vrea să treacă spre web și AI;
 - developer frontend care vrea să învețe Python, Java sau AI engineering;
 - QA care vrea să treacă pe automatizare;
@@ -35,6 +38,7 @@ Exemple de utilizatori:
 - profesionist tehnic care are un obiectiv clar, dar nu are un plan clar.
 
 Punctul comun între utilizatori nu este tehnologia curentă, ci faptul că:
+
 - pornesc din puncte diferite;
 - au skill-uri diferite;
 - urmăresc obiective diferite;
@@ -43,12 +47,14 @@ Punctul comun între utilizatori nu este tehnologia curentă, ci faptul că:
 ## 4. Problema pe care o rezolvă
 
 Instrumentele de chat AI generaliste oferă adesea răspunsuri bune, dar:
+
 - răspunsurile sunt prea generice;
 - contextul despre utilizator se pierde de la o sesiune la alta;
 - profilul profesional nu evoluează ca activ persistent;
 - utilizatorul trebuie să repete frecvent cine este și ce urmărește.
 
 SkillForge rezolvă această problemă prin:
+
 - profil persistent;
 - memorie între sesiuni;
 - răspunsuri ancorate în obiectivul utilizatorului;
@@ -60,6 +66,7 @@ SkillForge rezolvă această problemă prin:
 SkillForge trebuie să devină o unealtă personală online pe termen lung, nu doar un demo de integrare cu un LLM.
 
 Aplicația trebuie să permită utilizatorului să:
+
 - își salveze profilul profesional;
 - discute natural cu un agent AI;
 - primească răspunsuri în contextul profilului său;
@@ -92,9 +99,14 @@ Aplicația trebuie să permită utilizatorului să:
 Obiectiv: să existe o aplicație web reală, nu un simplu exemplu de o pagină, cu un agent AI contextual și flux minim cap-coadă.
 
 Intră în faza 1:
+
 - aplicație web cu interfață reală;
+- schelet construit pe Next.js (App Router), TypeScript, Tailwind CSS și shadcn/ui;
 - structură clară client/server;
+- cel puțin o rută suplimentară în afara paginii principale pentru a fixa convențiile de rutare;
+- cel puțin o componentă de client și una de server afișate explicit în interfață;
 - apelul către model făcut exclusiv de pe server;
+- existența unui Route Handler pregătit să citească variabile de mediu doar pe server;
 - provider LLM configurat din variabile de mediu;
 - chat cu răspuns în streaming;
 - profil de utilizator persistent;
@@ -102,9 +114,11 @@ Intră în faza 1:
 - memorie de bază între sesiuni;
 - posibilitatea de a adresa întrebări legate de skill-uri, carieră și planuri de învățare;
 - răspunsuri orientate spre pași concreți, nu doar descrieri teoretice;
+- formatare automată configurată de la început, inclusiv ordonarea claselor Tailwind;
 - documentație clară pentru ce s-a implementat și de ce.
 
 Rezultatul așteptat la finalul fazei 1:
+
 - utilizatorul își definește profilul;
 - deschide chat-ul;
 - primește răspunsuri în streaming de la agent;
@@ -114,6 +128,7 @@ Rezultatul așteptat la finalul fazei 1:
 ### Faza 2 — memorie și progres mai bogate
 
 Intră în faza 2:
+
 - actualizarea explicită a profilului pe baza progresului utilizatorului;
 - istoric de conversații mai bine structurat;
 - planuri de învățare salvate și revizitabile;
@@ -124,6 +139,7 @@ Intră în faza 2:
 ### Faza 3 — agent cu unelte
 
 Intră în faza 3:
+
 - agentul poate folosi unelte controlate de server;
 - căutare în notițe sau resurse proprii ale utilizatorului;
 - actualizarea planului de învățare prin unelte dedicate;
@@ -133,6 +149,7 @@ Intră în faza 3:
 ### Faza 4 — produs maturizat
 
 Poate include ulterior:
+
 - autentificare completă;
 - mai multe profile sau workspace-uri;
 - analytics și observabilitate;
@@ -144,6 +161,7 @@ Poate include ulterior:
 ## 9. Ce NU intră acum
 
 Nu intră în prima etapă, decât dacă sunt cerute explicit ulterior:
+
 - marketplace de cursuri;
 - funcții sociale;
 - gamification complex;
@@ -157,6 +175,7 @@ Nu intră în prima etapă, decât dacă sunt cerute explicit ulterior:
 ### 10.1 Profilul utilizatorului
 
 Profilul trebuie să poată include cel puțin:
+
 - rol curent;
 - stack actual;
 - skill-uri și nivel estimat pentru fiecare;
@@ -164,6 +183,7 @@ Profilul trebuie să poată include cel puțin:
 - eventuale constrângeri relevante de timp sau ritm de învățare.
 
 Profilul trebuie să fie:
+
 - persistent;
 - editabil;
 - folosit la construirea contextului agentului;
@@ -172,6 +192,7 @@ Profilul trebuie să fie:
 ### 10.2 Chat-ul cu agentul
 
 Chat-ul trebuie să ofere:
+
 - experiență de conversație naturală;
 - răspunsuri în streaming;
 - delimitare clară între mesajele utilizatorului și cele ale agentului;
@@ -181,6 +202,7 @@ Chat-ul trebuie să ofere:
 ### 10.3 Construirea contextului
 
 Contextul trimis agentului trebuie să combine:
+
 - instrucțiuni de sistem ale aplicației;
 - profilul utilizatorului;
 - obiectivul utilizatorului;
@@ -190,6 +212,7 @@ Contextul trimis agentului trebuie să combine:
 ### 10.4 Recomandări și planuri
 
 Agentul trebuie să poată genera:
+
 - recomandări contextualizate;
 - gap analysis între situația curentă și obiectiv;
 - planuri de învățare pe intervale concrete;
@@ -207,6 +230,7 @@ Agentul trebuie să poată genera:
 ### 11.2 Confidențialitatea datelor personale
 
 Profilul utilizatorului poate conține date personale sau semi-personale despre:
+
 - experiență;
 - nivel profesional;
 - planuri de carieră;
@@ -214,6 +238,7 @@ Profilul utilizatorului poate conține date personale sau semi-personale despre:
 - eventuale note sau progres.
 
 Prin urmare:
+
 - trebuie minimizată expunerea inutilă a acestor date;
 - trebuie trimis către provider doar contextul necesar pentru răspuns;
 - trebuie documentat ce date persistăm și de ce;
@@ -233,12 +258,25 @@ Prin urmare:
 - Schimbările trebuie să fie incremental de înțeles.
 - Documentația trebuie menținută la zi pe măsură ce produsul evoluează.
 
+### 11.5 Convenții tehnice inițiale
+
+- Proiectul folosește structură `src/` și alias de import `@/*`.
+- ESLint rămâne activ din primul pas.
+- Prettier este configurat din start, cu `prettier-plugin-tailwindcss`, pentru a păstra o ordine canonică a claselor și diff-uri comparabile între implementări.
+- Configurația de editor comună poate fi comisă în repository atunci când reduce zgomotul dintre mediile locale ale cursanților.
+
 ## 12. Regula obligatorie pentru integrări externe
 
 De fiecare dată când se adaugă o integrare externă, trebuie creat și actualizat un fișier:
+
 - `docs/<integrare>/README.md`
 
+În același commit trebuie actualizat și indexul:
+
+- `docs/README.md`
+
 Exemple de integrări:
+
 - provider LLM;
 - bază de date;
 - autentificare;
@@ -248,6 +286,7 @@ Exemple de integrări:
 - analytics.
 
 Acest fișier trebuie să includă obligatoriu:
+
 - ce serviciu este și de ce a fost ales;
 - ce pași trebuie făcuți manual de utilizator;
 - de unde se creează contul;
@@ -258,24 +297,29 @@ Acest fișier trebuie să includă obligatoriu:
 - linkuri spre documentația oficială relevantă.
 
 Reguli suplimentare:
+
 - codul poate fi generat de agent;
 - pașii manuali trebuie documentați explicit;
 - secretele reale nu se scriu în repository sau în documentație;
 - se folosesc doar nume de variabile de mediu, exemple mascate și explicații.
+- documentarea unei integrări noi pornește din `docs/_template/README.md`.
 
 ## 13. Livrabile de documentație obligatorii
 
 Structura minimă de documentație a proiectului:
+
 - `docs/requirements.md` — sursa de adevăr pentru produs;
+- `docs/README.md` — indexul documentației și locul unde apar toate integrările externe;
 - `README.md` — prezentare scurtă și ghid de orientare;
 - `CLAUDE.md` — instrucțiuni pentru agenți compatibili;
 - `AGENTS.md` — convenții generale de lucru pentru agenți;
 - `.github/copilot-instructions.md` — instrucțiuni specifice pentru Copilot;
-- `docs/templates/integration-README.md` — șablon pentru documentarea integrărilor externe.
+- `docs/_template/README.md` — șablon pentru documentarea integrărilor externe.
 
 ## 14. Criterii de succes pentru documentația inițială
 
 Documentația inițială este suficient de bună dacă:
+
 - alt pas al cursului poate porni doar de la acest fișier;
 - cerințele sunt separate clar de instrucțiunile de rulare;
 - există diferențiere între ce facem acum și ce lăsăm pentru mai târziu;
@@ -296,6 +340,7 @@ Documentația inițială este suficient de bună dacă:
 ## 16. Regula de evoluție a proiectului
 
 Pe măsură ce proiectul avansează:
+
 - actualizăm acest document când se schimbă scopul sau designul de produs;
 - păstrăm README-ul scurt;
 - sincronizăm instrucțiunile agenților cu regulile de aici;

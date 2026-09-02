@@ -1,51 +1,11 @@
-# Integration README template
+<!-- De ce: păstrăm această cale veche doar ca punte de compatibilitate până când toate referințele interne folosesc noul șablon canonic. -->
 
-> Rename this folder to `docs/<integration>/README.md` when documenting a real external integration.
+# Legacy pointer
 
-## 1. Overview
+Template-ul canonic pentru integrări externe este acum [docs/_template/README.md](../_template/README.md).
 
-- Integration name:
-- Why it is used in SkillForge:
-- Phase introduced:
+La fiecare integrare nouă:
 
-## 2. Manual setup required
-
-- Account creation URL:
-- Steps to create the account:
-- Team/workspace/project setup steps:
-
-## 3. Credentials
-
-- Where the credential is generated:
-- Credential type:
-- Required environment variables:
-  - `EXAMPLE_API_KEY=`
-  - `EXAMPLE_PROJECT_ID=`
-
-> Never place real secret values in this file.
-
-## 4. Provider dashboard configuration
-
-- Required toggles/settings:
-- Allowed origins, redirect URLs, webhook URLs, or regions:
-- Any quotas or limits to review:
-
-## 5. Local development notes
-
-- What must exist in `.env.local`:
-- What is optional for local development:
-- How to verify the integration is working:
-
-## 6. Pricing
-
-- Official pricing page:
-- Billing model summary:
-- Free tier notes:
-- Cost risks to monitor:
-
-## 7. Official documentation
-
-- Getting started:
-- API reference:
-- Pricing:
-- Security/best practices:
+1. creezi `docs/<integrare>/README.md` pornind din șablonul canonic;
+2. actualizezi [docs/README.md](../README.md) în același commit;
+3. documentezi doar numele variabilelor de mediu, niciodată chei reale.

@@ -1,0 +1,7 @@
+# De ce: ignorăm exact artefactele unui proiect Next.js ca să nu formatăm fișiere generate sau lockfile-ul local.
+node_modules
+.next
+out
+coverage
+package-lock.json
+.DS_Store

@@ -1,0 +1,15 @@
+# De ce: păstrăm dependențele, build-urile și fișierele locale în afara Git-ului ca să nu amestecăm codul sursă cu artefacte sau secrete.
+/node_modules
+/.pnp
+.pnp.*
+/.next
+/out
+/coverage
+*.tsbuildinfo
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+.DS_Store

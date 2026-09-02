@@ -1,6 +1,7 @@
 # Copilot Instructions
 
 <!-- BEGIN SHARED RULES -->
+
 # Shared Agent Rules
 
 - `docs/requirements.md` is the canonical product requirements file.
@@ -12,6 +13,8 @@
 - Never commit or document real secrets.
 - All provider and credential access must remain server-side.
 - Every external integration must include `docs/<integration>/README.md` with manual setup, environment variables, dashboard configuration, pricing, and official links.
+- Every external integration must also update `docs/README.md` in the same commit with the integration name, the course step, and the new documentation link.
+
 <!-- END SHARED RULES -->
 
 These instructions apply to GitHub Copilot and related coding agents in this repository.
@@ -22,3 +25,4 @@ These instructions apply to GitHub Copilot and related coding agents in this rep
 - Prefer implementations that support the course progression.
 - Keep examples safe for local development and deployment.
 - Confirm external integration docs exist when relevant.
+- When adding one, start from `docs/_template/README.md` and keep real secrets only in `.env.local`.
