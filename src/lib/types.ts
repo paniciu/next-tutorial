@@ -6,7 +6,7 @@ export type SkillLevel = "începător" | "intermediar" | "avansat";
 
 export type ProviderId = "openai" | "anthropic" | "google";
 
-export type SettingsSection = "general" | "profile" | "providers";
+export type SettingsSection = "general" | "profile" | "providers" | "about";
 
 export type ChatRole = "user" | "assistant";
 

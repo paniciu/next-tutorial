@@ -1,9 +1,10 @@
 "use client";
 
 import { type ComponentType, type ReactNode, useState } from "react";
-import { Settings, Sparkles, UserRound } from "lucide-react";
+import { Info, Settings, Sparkles, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
+import { AboutForm } from "@/components/settings/about-form";
 import { AppearanceForm } from "@/components/settings/appearance-form";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,8 @@ type SettingsRegistryItem = {
 const settingsRegistry: SettingsRegistryItem[] = [
   { id: "general", label: "General", icon: Settings },
   { id: "profile", label: "Profilul tău", icon: UserRound },
-  { id: "providers", label: "Providere", icon: Sparkles }
+  { id: "providers", label: "Providere", icon: Sparkles },
+  { id: "about", label: "Despre aplicație", icon: Info }
 ];
 
 // De ce: preferințele sunt mutate într-un dialog separat pentru a menține conversația principală curată și continuă, exact ca fluxul de produs dorit.
@@ -84,18 +86,19 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           })}
         </div>
       </section>
-    )
+    ),
+    about: <AboutForm />
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl p-0 sm:max-w-4xl" showCloseButton>
+      <DialogContent className="h-[680px] max-h-[90svh] max-w-4xl p-0 sm:max-w-4xl" showCloseButton>
         <DialogHeader className="sr-only">
           <DialogTitle>Preferințe SkillForge</DialogTitle>
           <DialogDescription>Gestionează profilul, tema și providerul activ.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid min-h-[520px] grid-cols-1 md:grid-cols-[240px_1fr]">
+        <div className="grid h-full grid-cols-1 md:grid-cols-[240px_1fr]">
           <aside className="border-r bg-muted/30 p-4">
             <p className="mb-3 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Settings</p>
             <nav className="space-y-1">
@@ -119,14 +122,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </nav>
           </aside>
 
-          <section className="flex min-h-0 flex-col">
+          <section className="flex h-full min-h-0 flex-col">
             <div className="p-5 pb-4">
               <h2 className="text-base font-semibold">
                 {settingsRegistry.find(item => item.id === activeSection)?.label}
               </h2>
             </div>
             <Separator />
-            <div className="min-h-0 flex-1 overflow-y-auto p-5">{sectionContentRegistry[activeSection]}</div>
+            <div className="min-h-0 flex-1 overflow-hidden p-5">{sectionContentRegistry[activeSection]}</div>
           </section>
         </div>
       </DialogContent>
