@@ -96,34 +96,41 @@ Aplicația trebuie să permită utilizatorului să:
 
 ### Faza 1 — fundația aplicației (acum)
 
-Obiectiv: să existe o aplicație web reală, nu un simplu exemplu de o pagină, cu un agent AI contextual și flux minim cap-coadă.
+Obiectiv: să existe o aplicație web complet navigabilă și publicabilă înainte de orice integrare LLM reală.
 
-Intră în faza 1:
+Faza 1 este împărțită în doi pași de curs:
 
-- aplicație web cu interfață reală;
-- schelet construit pe Next.js (App Router), TypeScript, Tailwind CSS și shadcn/ui;
-- structură clară client/server;
-- cel puțin o rută suplimentară în afara paginii principale pentru a fixa convențiile de rutare;
-- cel puțin o componentă de client și una de server afișate explicit în interfață;
-- apelul către model făcut exclusiv de pe server;
-- existența unui Route Handler pregătit să citească variabile de mediu doar pe server;
-- provider LLM configurat din variabile de mediu;
-- chat cu răspuns în streaming;
-- profil de utilizator persistent;
-- `system prompt` construit din profilul utilizatorului;
-- memorie de bază între sesiuni;
-- posibilitatea de a adresa întrebări legate de skill-uri, carieră și planuri de învățare;
-- răspunsuri orientate spre pași concreți, nu doar descrieri teoretice;
-- formatare automată configurată de la început, inclusiv ordonarea claselor Tailwind;
+#### Faza 1A — UI complet pe date inventate (pasul curent)
+
+Intră în 1A:
+
+- aplicație web cu interfață reală, structurată în trei zone (sidebar, zonă centrală, preferințe în dialog separat);
+- Next.js (App Router), TypeScript, Tailwind CSS v4 și shadcn/ui;
+- doar date inventate, centralizate în `src/lib/mock/`;
+- stocare locală persistentă pentru profil, conversații și setări (ex: Zustand + persist);
+- stări complete de UI: empty, loading/skeleton, typing, error;
+- responsive corect, inclusiv comportament mobil pentru sidebar;
+- fără chei API, fără SDK LLM, fără apeluri reale la modele;
 - documentație clară pentru ce s-a implementat și de ce.
 
-Rezultatul așteptat la finalul fazei 1:
+Rezultatul așteptat la finalul 1A:
 
-- utilizatorul își definește profilul;
-- deschide chat-ul;
-- primește răspunsuri în streaming de la agent;
-- agentul răspunde în contextul profilului și al obiectivului;
-- contextul de bază persistă între sesiuni.
+- utilizatorul își definește profilul local;
+- navighează între conversații demo;
+- trimite mesaje într-un flux simulat local;
+- tema se schimbă din preferințe;
+- aplicația pornește pe orice laptop fără configurare suplimentară.
+
+#### Faza 1B — integrarea LLM server-side (pasul următor)
+
+Intră în 1B:
+
+- apelul către model făcut exclusiv de pe server;
+- Route Handler dedicat pentru chat;
+- provider/model configurat din variabile de mediu;
+- răspunsuri în streaming;
+- `system prompt` construit din profil + context;
+- păstrarea regulii că secretele rămân doar pe server.
 
 ### Faza 2 — memorie și progres mai bogate
 
@@ -194,7 +201,8 @@ Profilul trebuie să fie:
 Chat-ul trebuie să ofere:
 
 - experiență de conversație naturală;
-- răspunsuri în streaming;
+- în 1A: flux local simulat fără apel real la model;
+- în 1B+: răspunsuri în streaming server-side;
 - delimitare clară între mesajele utilizatorului și cele ale agentului;
 - tratament robust pentru stări de încărcare și erori;
 - continuitate între sesiuni, cel puțin la nivel de context și istoric de bază.

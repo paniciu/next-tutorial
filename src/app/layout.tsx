@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 import "./globals.css";
@@ -19,8 +22,13 @@ export const metadata: Metadata = {
 // De ce: html și body trăiesc aici ca să nu duplicăm infrastructura comună pe fiecare rută nouă.
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ro" className={cn("font-sans", geist.variable)}>
-      <body>{children}</body>
+    <html lang="ro" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+      <body>
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster position="top-right" richColors />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
