@@ -1,5 +1,6 @@
 "use client";
 
+import type { UIMessage } from "ai";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 
@@ -7,15 +8,19 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "@/lib/types";
 
 type MessageItemProps = {
-  message: ChatMessage;
+  message: UIMessage;
 };
 
 // De ce: separăm item-ul de mesaj pentru a păstra clară diferența de tratament între roluri, copy actions și extinderile viitoare pe fiecare bulă.
 export function MessageItem({ message }: MessageItemProps) {
   const isUser = message.role === "user";
+  const textContent = message.parts
+    .filter(part => part.type === "text")
+    .map(part => part.text)
+    .join("\n")
+    .trim();
 
   return (
     <article className={cn("flex w-full gap-3", isUser ? "justify-end" : "justify-start")}>
@@ -39,7 +44,7 @@ export function MessageItem({ message }: MessageItemProps) {
         >
           {isUser ? "Tu" : "SkillForge"}
         </p>
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p className="whitespace-pre-wrap">{textContent || "..."}</p>
 
         <Tooltip>
           <TooltipTrigger asChild>
@@ -51,8 +56,9 @@ export function MessageItem({ message }: MessageItemProps) {
                 "absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100",
                 isUser ? "text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" : ""
               )}
+              disabled={!textContent}
               onClick={async () => {
-                await navigator.clipboard.writeText(message.content);
+                await navigator.clipboard.writeText(textContent);
                 toast.success("Mesaj copiat.");
               }}
             >

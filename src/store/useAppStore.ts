@@ -3,9 +3,10 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import { mockAssistantReplies, mockConversations } from "@/lib/mock/conversations";
-import { mockProfile, mockProviderModels } from "@/lib/mock/profile";
-import type { ChatMessage, Conversation, ResolvedTheme, ThemePreference, UserProfile } from "@/lib/types";
+import { mockConversations } from "@/lib/mock/conversations";
+import { mockProfile } from "@/lib/mock/profile";
+import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER_ID, providerModelOptions } from "@/lib/providers";
+import type { ConversationSummary, ResolvedTheme, ThemePreference, UserProfile } from "@/lib/types";
 
 type AppState = {
   profile: UserProfile;
@@ -13,59 +14,79 @@ type AppState = {
   selectedModel: string;
   themePreference: ThemePreference;
   resolvedTheme: ResolvedTheme;
-  conversations: Conversation[];
-  activeConversationId: string | null;
-  isAssistantTyping: boolean;
-  chatError: string | null;
+  conversations: ConversationSummary[];
+  activeConversationId: string;
   setThemePreference: (theme: ThemePreference) => void;
   setResolvedTheme: (theme: ResolvedTheme) => void;
   updateProfile: (patch: Partial<UserProfile>) => void;
   setProviderModel: (provider: string, model: string) => void;
-  setActiveConversation: (conversationId: string | null) => void;
-  upsertConversation: (conversation: Conversation) => void;
+  setActiveConversation: (conversationId: string) => void;
+  touchConversation: (conversationId: string, titleHint?: string) => void;
   renameConversation: (conversationId: string, title: string) => void;
   deleteConversation: (conversationId: string) => void;
-  sendMessage: (content: string) => Conversation;
-  appendAssistantMessage: (conversationId: string, content: string) => void;
-  stopAssistant: () => void;
-  setTyping: (typing: boolean) => void;
-  setChatError: (message: string | null) => void;
   startNewConversation: () => void;
-  getRandomAssistantReply: () => string;
 };
 
 const nowIso = () => new Date().toISOString();
 
 const makeId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`;
 
-const initialProvider = mockProviderModels[0];
+const defaultTitle = "Conversație nouă";
 
-// De ce: persistăm starea locală ca fluxul complet de chat să poată fi demo-uit fără backend, dar cu experiență apropiată de produsul final.
+const makeConversationSummary = (title = defaultTitle): ConversationSummary => {
+  const timestamp = nowIso();
+
+  return {
+    id: makeId("conv"),
+    title,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+};
+
+const initialConversation = mockConversations[0] ?? makeConversationSummary();
+
+// De ce: store-ul rămâne sursă de adevăr doar pentru shell (profil, setări, lista de conversații), iar mesajele active sunt deținute de useChat.
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    set => ({
       profile: mockProfile,
-      selectedProvider: initialProvider.provider,
-      selectedModel: initialProvider.model,
+      selectedProvider: DEFAULT_PROVIDER_ID,
+      selectedModel: DEFAULT_MODEL_ID,
       themePreference: "system",
       resolvedTheme: "light",
       conversations: mockConversations,
-      activeConversationId: mockConversations[0]?.id ?? null,
-      isAssistantTyping: false,
-      chatError: null,
+      activeConversationId: initialConversation.id,
       setThemePreference: theme => set({ themePreference: theme }),
       setResolvedTheme: theme => set({ resolvedTheme: theme }),
       updateProfile: patch => set(state => ({ profile: { ...state.profile, ...patch } })),
       setProviderModel: (provider, model) => set({ selectedProvider: provider, selectedModel: model }),
-      setActiveConversation: conversationId => set({ activeConversationId: conversationId, chatError: null }),
-      upsertConversation: conversation =>
+      setActiveConversation: conversationId => set({ activeConversationId: conversationId }),
+      touchConversation: (conversationId, titleHint) =>
         set(state => {
-          const exists = state.conversations.some(item => item.id === conversation.id);
-          const conversations = exists
-            ? state.conversations.map(item => (item.id === conversation.id ? conversation : item))
-            : [conversation, ...state.conversations];
+          const now = nowIso();
+          const existing = state.conversations.find(item => item.id === conversationId);
+          const fallbackTitle = titleHint?.split(" ").slice(0, 5).join(" ").trim() || defaultTitle;
 
-          return { conversations };
+          const touchedConversation: ConversationSummary = existing
+            ? {
+                ...existing,
+                title: existing.title === defaultTitle && titleHint ? fallbackTitle : existing.title,
+                updatedAt: now
+              }
+            : {
+                id: conversationId,
+                title: fallbackTitle,
+                createdAt: now,
+                updatedAt: now
+              };
+
+          const conversations = [
+            touchedConversation,
+            ...state.conversations.filter(item => item.id !== touchedConversation.id)
+          ];
+
+          return { conversations, activeConversationId: touchedConversation.id };
         }),
       renameConversation: (conversationId, title) =>
         set(state => ({
@@ -74,78 +95,47 @@ export const useAppStore = create<AppState>()(
       deleteConversation: conversationId =>
         set(state => {
           const conversations = state.conversations.filter(item => item.id !== conversationId);
+
+          if (conversations.length === 0) {
+            const freshConversation = makeConversationSummary();
+
+            return {
+              conversations: [freshConversation],
+              activeConversationId: freshConversation.id
+            };
+          }
+
           const nextActive =
-            state.activeConversationId === conversationId ? (conversations[0]?.id ?? null) : state.activeConversationId;
+            state.activeConversationId === conversationId ? conversations[0].id : state.activeConversationId;
 
           return { conversations, activeConversationId: nextActive };
         }),
-      sendMessage: content => {
-        const state = get();
-        const userMessage: ChatMessage = {
-          id: makeId("msg"),
-          role: "user",
-          content,
-          createdAt: nowIso()
-        };
+      startNewConversation: () =>
+        set(state => {
+          const conversation = makeConversationSummary();
 
-        const title = content.split(" ").slice(0, 4).join(" ").trim() || "Conversație nouă";
-
-        const activeConversation = state.conversations.find(item => item.id === state.activeConversationId);
-
-        const conversation: Conversation = activeConversation
-          ? {
-              ...activeConversation,
-              updatedAt: nowIso(),
-              title: activeConversation.title || title,
-              messages: [...activeConversation.messages, userMessage]
-            }
-          : {
-              id: makeId("conv"),
-              title,
-              createdAt: nowIso(),
-              updatedAt: nowIso(),
-              messages: [userMessage]
-            };
-
-        set(current => {
-          const conversations = current.conversations.filter(item => item.id !== conversation.id);
           return {
-            conversations: [conversation, ...conversations],
-            activeConversationId: conversation.id,
-            chatError: null
+            conversations: [conversation, ...state.conversations],
+            activeConversationId: conversation.id
           };
-        });
-
-        return conversation;
-      },
-      appendAssistantMessage: (conversationId, content) =>
-        set(state => ({
-          conversations: state.conversations.map(item =>
-            item.id === conversationId
-              ? {
-                  ...item,
-                  updatedAt: nowIso(),
-                  messages: [
-                    ...item.messages,
-                    { id: makeId("msg"), role: "assistant", content, createdAt: nowIso() } satisfies ChatMessage
-                  ]
-                }
-              : item
-          ),
-          isAssistantTyping: false
-        })),
-      stopAssistant: () => set({ isAssistantTyping: false }),
-      setTyping: typing => set({ isAssistantTyping: typing }),
-      setChatError: message => set({ chatError: message, isAssistantTyping: false }),
-      startNewConversation: () => set({ activeConversationId: null, chatError: null, isAssistantTyping: false }),
-      getRandomAssistantReply: () => {
-        const index = Math.floor(Math.random() * mockAssistantReplies.length);
-        return mockAssistantReplies[index] ?? mockAssistantReplies[0];
-      }
+        })
     }),
     {
       name: "skillforge-app",
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => state => {
+        if (!state) {
+          return;
+        }
+
+        const isValidSelection = providerModelOptions.some(
+          option => option.provider === state.selectedProvider && option.model === state.selectedModel
+        );
+
+        if (!isValidSelection) {
+          state.setProviderModel(DEFAULT_PROVIDER_ID, DEFAULT_MODEL_ID);
+        }
+      },
       partialize: state => ({
         profile: state.profile,
         selectedProvider: state.selectedProvider,

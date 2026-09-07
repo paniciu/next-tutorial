@@ -23,17 +23,9 @@ export type ProviderModelOption = {
   label: string;
 };
 
-export type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  content: string;
-  createdAt: string;
-};
-
-export type Conversation = {
+export type ConversationSummary = {
   id: string;
   title: string;
-  messages: ChatMessage[];
   createdAt: string;
   updatedAt: string;
 };

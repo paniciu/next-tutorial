@@ -10,5 +10,6 @@
 
 Tabelul rămâne gol până când apare prima integrare reală și trebuie completat în același commit în care intră integrarea.
 
-| integrare | la ce pas a intrat | link |
-| --------- | ------------------ | ---- |
+| integrare          | la ce pas a intrat | link                                              |
+| ------------------ | ------------------ | ------------------------------------------------- |
+| Anthropic (AI SDK) | Faza 1B            | [docs/anthropic/README.md](./anthropic/README.md) |

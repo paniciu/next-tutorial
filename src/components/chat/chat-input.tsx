@@ -9,15 +9,25 @@ import { Textarea } from "@/components/ui/textarea";
 type ChatInputProps = {
   value: string;
   onChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void>;
   onStop: () => void;
   isTyping: boolean;
   providerLabel: string;
   modelLabel: string;
+  focusKey: string;
 };
 
 // De ce: composer-ul este separat pentru că va deveni punctul cu cele mai multe reguli de interacțiune când adăugăm streaming și atașamente.
-export function ChatInput({ value, onChange, onSubmit, onStop, isTyping, providerLabel, modelLabel }: ChatInputProps) {
+export function ChatInput({
+  value,
+  onChange,
+  onSubmit,
+  onStop,
+  isTyping,
+  providerLabel,
+  modelLabel,
+  focusKey
+}: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -29,6 +39,10 @@ export function ChatInput({ value, onChange, onSubmit, onStop, isTyping, provide
     textarea.style.height = "auto";
     textarea.style.height = `${Math.min(textarea.scrollHeight, 240)}px`;
   }, [value]);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, [focusKey]);
 
   return (
     <div className="rounded-2xl border bg-card p-3 shadow-xs">

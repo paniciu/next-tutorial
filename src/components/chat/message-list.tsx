@@ -1,14 +1,14 @@
 "use client";
 
+import type { UIMessage } from "ai";
 import { LoaderCircle, TriangleAlert } from "lucide-react";
 
 import { MessageItem } from "@/components/chat/message-item";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ChatMessage } from "@/lib/types";
 
 type MessageListProps = {
-  messages: ChatMessage[];
+  messages: UIMessage[];
   isTyping: boolean;
   isLoading: boolean;
   error: string | null;

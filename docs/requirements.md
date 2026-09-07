@@ -132,6 +132,14 @@ Intră în 1B:
 - `system prompt` construit din profil + context;
 - păstrarea regulii că secretele rămân doar pe server.
 
+Stare implementare (2026-09-07):
+
+- chat-ul folosește streaming real prin Route Handler server-side;
+- integrarea LLM activă este Anthropic, prin AI SDK;
+- cheia `ANTHROPIC_API_KEY` este citită doar pe server;
+- clientul folosește `useChat`, fără parsare manuală de stream în UI;
+- store-ul global păstrează doar shell state (profil, setări, sumar conversații).
+
 ### Faza 2 — memorie și progres mai bogate
 
 Intră în faza 2:

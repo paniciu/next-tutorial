@@ -23,6 +23,9 @@
   "homepage": "https://github.com/paniciu/next-tutorial#readme",
   "private": true,
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.49",
+    "@ai-sdk/react": "^4.0.96",
+    "ai": "^7.0.93",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.2.6",
