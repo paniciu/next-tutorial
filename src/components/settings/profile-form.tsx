@@ -33,7 +33,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
       }}
     >
       <div className="space-y-2">
-        <Label htmlFor="profile-name">Nume</Label>
+        <Label htmlFor="profile-name">Nume complet</Label>
         <Input
           id="profile-name"
           value={draft.name}
