@@ -27,15 +27,18 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 
+type AppSidebarProps = {
+  onStartNewConversation: () => void;
+};
+
 // De ce: sidebar-ul concentrează navigația persistentă a conversațiilor ca zona centrală să rămână dedicată strict dialogului cu agentul.
-export function AppSidebar() {
+export function AppSidebar({ onStartNewConversation }: AppSidebarProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const profile = useAppStore(state => state.profile);
   const conversations = useAppStore(state => state.conversations);
   const activeConversationId = useAppStore(state => state.activeConversationId);
   const setActiveConversation = useAppStore(state => state.setActiveConversation);
-  const startNewConversation = useAppStore(state => state.startNewConversation);
   const renameConversation = useAppStore(state => state.renameConversation);
   const deleteConversation = useAppStore(state => state.deleteConversation);
 
@@ -48,8 +51,9 @@ export function AppSidebar() {
     <>
       <Sidebar collapsible="offcanvas">
         <SidebarHeader className="gap-3 p-3">
-          <Button className="w-full justify-start gap-2" onClick={startNewConversation}>
-            <Plus className="size-4" />+ New
+          <Button className="w-full justify-start gap-2" onClick={onStartNewConversation}>
+            <Plus className="size-4" />
+            Chat nou
           </Button>
         </SidebarHeader>
 

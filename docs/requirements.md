@@ -2,7 +2,7 @@
 
 > Ultima actualizare: 2026-09-09
 >
-> Faza curentă: Faza 1C — deploy timpuriu pe Vercel + rutină pre-deploy (în curs)
+> Faza curentă: Faza 1D — acțiuni pe conversație + export JSON/Markdown (în curs)
 
 ## 1. Rolul acestui document
 
@@ -98,13 +98,13 @@ Aplicația trebuie să permită utilizatorului să:
 
 ## 8. Cerințe funcționale pe faze
 
-### Faza 1 — fundația aplicației + deploy timpuriu (acum)
+### Faza 1 — fundația aplicației + deploy timpuriu + acțiuni de conversație (acum)
 
 Obiectiv: să existe o aplicație web complet navigabilă și publicabilă înainte de orice integrare LLM reală.
 
-Faza 1 este împărțită în trei pași de curs:
+Faza 1 este împărțită în patru pași de curs:
 
-#### Faza 1A — UI complet pe date inventate (pasul curent)
+#### Faza 1A — UI complet pe date inventate
 
 Intră în 1A:
 
@@ -125,7 +125,7 @@ Rezultatul așteptat la finalul 1A:
 - tema se schimbă din preferințe;
 - aplicația pornește pe orice laptop fără configurare suplimentară.
 
-#### Faza 1B — integrarea LLM server-side (pasul curent)
+#### Faza 1B — integrarea LLM server-side
 
 Intră în 1B:
 
@@ -148,7 +148,7 @@ Stare implementare (2026-09-09):
 - datele de profil venite din browser sunt normalizate server-side înainte de intrarea în prompt (whitelist câmpuri, trim, limite de lungime);
 - UI arată explicit când profilul este activ și include acțiune directă de ștergere a profilului local.
 
-#### Faza 1C — deploy timpuriu pe Vercel (pasul curent)
+#### Faza 1C — deploy timpuriu pe Vercel
 
 Intră în 1C:
 
@@ -162,6 +162,22 @@ Intră în 1C:
 Regulă operațională explicită în 1C:
 
 - după orice adăugare/modificare de variabilă în Vercel, deploy-ul existent nu preia automat valoarea; este obligatoriu Redeploy.
+
+#### Faza 1D — acțiuni pe conversație + export JSON/Markdown (pasul curent)
+
+Intră în 1D:
+
+- utilizatorul poate porni „Chat nou” din sidebar, cu confirmare înainte de golirea conversației curente;
+- utilizatorul poate folosi „Mai încearcă” pe ultimul răspuns al asistentului, iar răspunsul vechi este înlocuit (nu duplicat);
+- utilizatorul poate copia textul unui mesaj direct din acțiunile pe mesaj, cu confirmare vizuală (toast);
+- acțiunile per mesaj apar la hover și rămân locale mesajului (fără toolbar global deasupra conversației);
+- utilizatorul poate exporta conversația curentă din meniul de header în două formate: JSON și Markdown;
+- exportul include profilul, mesajele și data exportului, într-un fișier lizibil și reutilizabil.
+
+Nu intră încă în 1D (amânat explicit):
+
+- export PDF;
+- editarea mesajelor după trimitere.
 
 ### Faza 2 — memorie și progres mai bogate
 
@@ -242,6 +258,13 @@ Chat-ul trebuie să ofere:
 - tratament robust pentru stări de încărcare și erori;
 - continuitate între sesiuni, cel puțin la nivel de context și istoric de bază.
 
+Acțiuni operaționale minime în faza curentă (1D):
+
+- „Mai încearcă” folosește aceeași listă de mesaje și înlocuiește ultimul răspuns al asistentului;
+- „Copiază” este disponibil pe mesaj și confirmă reușita prin notificarea existentă;
+- „Chat nou” rămâne în sidebar și golește conversația curentă doar după confirmare;
+- exportul rămâne în meniul de header și generează JSON + Markdown din aceeași structură de date intermediară.
+
 ### 10.3 Construirea contextului
 
 Contextul trimis agentului trebuie să combine:
@@ -292,6 +315,7 @@ Stocare și vizibilitate în etapa curentă:
 - profilul este stocat local, în browserul utilizatorului, prin `localStorage` (cheia `skillforge-app`), nu într-o bază de date server;
 - profilul este vizibil utilizatorului (în UI) și este transmis către providerul LLM doar în momentul trimiterii unui mesaj;
 - aplicația nu introduce în acest pas sincronizare de profil între device-uri și nici administrare centralizată de date personale.
+- exportul conversației scoate profilul într-un fișier local (JSON/Markdown), deci utilizatorul trebuie să știe că poate redistribui ulterior aceste date personale.
 
 Ștergere:
 

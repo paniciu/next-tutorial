@@ -1,26 +1,40 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { UIMessage } from "ai";
-import { Copy } from "lucide-react";
+import { Copy, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { extractMessageText } from "@/lib/message-utils";
 import { cn } from "@/lib/utils";
 
 type MessageItemProps = {
   message: UIMessage;
+  onRegenerate: (messageId: string) => Promise<void>;
+  canRegenerate: boolean;
+  isLastAssistant: boolean;
 };
 
 // De ce: separăm item-ul de mesaj pentru a păstra clară diferența de tratament între roluri, copy actions și extinderile viitoare pe fiecare bulă.
-export function MessageItem({ message }: MessageItemProps) {
+export function MessageItem({ message, onRegenerate, canRegenerate, isLastAssistant }: MessageItemProps) {
   const isUser = message.role === "user";
-  const textContent = message.parts
-    .filter(part => part.type === "text")
-    .map(part => part.text)
-    .join("\n")
-    .trim();
+  const [canUseClipboard, setCanUseClipboard] = useState(false);
+  const textContent = extractMessageText(message);
+
+  useEffect(() => {
+    const clipboardAvailable =
+      typeof window !== "undefined" &&
+      window.isSecureContext &&
+      typeof navigator !== "undefined" &&
+      Boolean(navigator.clipboard?.writeText);
+
+    setCanUseClipboard(clipboardAvailable);
+  }, []);
+
+  const canShowRegenerate = message.role === "assistant" && isLastAssistant;
 
   return (
     <article className={cn("flex w-full gap-3", isUser ? "justify-end" : "justify-start")}>
@@ -44,29 +58,73 @@ export function MessageItem({ message }: MessageItemProps) {
         >
           {isUser ? "Tu" : "SkillForge"}
         </p>
-        <p className="whitespace-pre-wrap">{textContent || "..."}</p>
+        <p className="whitespace-pre-wrap">{textContent}</p>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              className={cn(
-                "absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100",
-                isUser ? "text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" : ""
-              )}
-              disabled={!textContent}
-              onClick={async () => {
-                await navigator.clipboard.writeText(textContent);
-                toast.success("Mesaj copiat.");
-              }}
-            >
-              <Copy className="size-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Copy</TooltipContent>
-        </Tooltip>
+        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          {canShowRegenerate ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className={cn(
+                    isUser ? "text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" : ""
+                  )}
+                  disabled={!canRegenerate}
+                  onClick={() => {
+                    void onRegenerate(message.id);
+                  }}
+                >
+                  <RefreshCcw className="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Mai încearcă</TooltipContent>
+            </Tooltip>
+          ) : null}
+
+          {canUseClipboard ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className={cn(
+                    isUser ? "text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" : ""
+                  )}
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(textContent);
+                    toast.success("Mesaj copiat.");
+                  }}
+                >
+                  <Copy className="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Copiază</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className={cn(
+                    "cursor-not-allowed opacity-60",
+                    isUser ? "text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" : ""
+                  )}
+                  onClick={() => {
+                    toast.error("Copierea directă merge doar pe localhost sau HTTPS.");
+                  }}
+                >
+                  <Copy className="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Clipboard indisponibil</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
       </div>
 
       {isUser && (

@@ -1,60 +1,46 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { useEffect, useRef, useState } from "react";
+import type { UIMessage } from "ai";
 
 import { ChatInput } from "@/components/chat/chat-input";
 import { EmptyState } from "@/components/chat/empty-state";
 import { MessageList } from "@/components/chat/message-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getProviderModelLabel } from "@/lib/providers";
 import { useAppStore } from "@/store/useAppStore";
 
+type ChatProps = {
+  messages: UIMessage[];
+  status: "submitted" | "streaming" | "ready" | "error";
+  error: string | null;
+  onSendMessage: (content: string) => Promise<void>;
+  onStop: () => void;
+  onRegenerateMessage: (messageId: string) => Promise<void>;
+  activeConversationId: string;
+  providerLabel: string;
+  modelLabel: string;
+};
+
 // De ce: orchestratorul de chat ține împreună fluxul mesajelor și stările tranzitorii, ca subcomponentele să rămână mici și explicabile.
-export function Chat() {
+export function Chat({
+  messages,
+  status,
+  error,
+  onSendMessage,
+  onStop,
+  onRegenerateMessage,
+  activeConversationId,
+  providerLabel,
+  modelLabel
+}: ChatProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const [draft, setDraft] = useState("");
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
   const profile = useAppStore(state => state.profile);
-  const activeConversationId = useAppStore(state => state.activeConversationId);
-  const selectedProvider = useAppStore(state => state.selectedProvider);
-  const selectedModel = useAppStore(state => state.selectedModel);
-  const touchConversation = useAppStore(state => state.touchConversation);
-
-  const { messages, sendMessage, stop, status, error } = useChat({
-    id: activeConversationId,
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-      // De ce: body ca funcție citește store-ul exact la momentul trimiterii și evită profilul "înghețat" de la montare.
-      body: () => {
-        const state = useAppStore.getState();
-
-        return {
-          selectedProvider: state.selectedProvider,
-          selectedModel: state.selectedModel,
-          profile: state.profile
-        };
-      }
-    })
-  });
 
   const isAssistantTyping = status === "submitted" || status === "streaming";
-  const chatError = error
-    ? "Nu am putut genera răspunsul acum. Dacă providerul nu e configurat încă, aplicația rămâne funcțională, dar chat-ul va porni după ce setezi variabilele în platforma de deploy și faci redeploy."
-    : null;
-
-  const selectedProviderLabel = useMemo(() => {
-    const fullLabel = getProviderModelLabel(selectedProvider, selectedModel);
-    return fullLabel.split(" · ")[0] ?? selectedProvider;
-  }, [selectedModel, selectedProvider]);
-
-  const selectedModelLabel = useMemo(() => {
-    const fullLabel = getProviderModelLabel(selectedProvider, selectedModel);
-    return fullLabel.split(" · ")[1] ?? selectedModel;
-  }, [selectedModel, selectedProvider]);
 
   useEffect(() => {
     const startId = window.setTimeout(() => {
@@ -73,20 +59,15 @@ export function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, status]);
 
-  const handleStop = () => {
-    stop();
-  };
-
   const handleSubmit = async () => {
     const content = draft.trim();
     if (!content || isAssistantTyping) {
       return;
     }
 
-    touchConversation(activeConversationId, content);
     setDraft("");
 
-    await sendMessage({ text: content });
+    await onSendMessage(content);
   };
 
   return (
@@ -98,7 +79,9 @@ export function Chat() {
               messages={messages}
               isTyping={isAssistantTyping}
               isLoading={isLoadingConversation}
-              error={chatError}
+              error={error}
+              onRegenerateMessage={onRegenerateMessage}
+              canRegenerate={!isAssistantTyping}
             />
             <div ref={bottomRef} />
           </ScrollArea>
@@ -108,10 +91,10 @@ export function Chat() {
               value={draft}
               onChange={setDraft}
               onSubmit={handleSubmit}
-              onStop={handleStop}
+              onStop={onStop}
               isTyping={isAssistantTyping}
-              providerLabel={selectedProviderLabel}
-              modelLabel={selectedModelLabel}
+              providerLabel={providerLabel}
+              modelLabel={modelLabel}
               focusKey={`${activeConversationId}-${status}`}
             />
           </div>
@@ -124,10 +107,10 @@ export function Chat() {
               value={draft}
               onChange={setDraft}
               onSubmit={handleSubmit}
-              onStop={handleStop}
+              onStop={onStop}
               isTyping={isAssistantTyping}
-              providerLabel={selectedProviderLabel}
-              modelLabel={selectedModelLabel}
+              providerLabel={providerLabel}
+              modelLabel={modelLabel}
               focusKey={`${activeConversationId}-${status}`}
             />
           </div>

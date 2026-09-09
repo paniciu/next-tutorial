@@ -12,10 +12,21 @@ type MessageListProps = {
   isTyping: boolean;
   isLoading: boolean;
   error: string | null;
+  onRegenerateMessage: (messageId: string) => Promise<void>;
+  canRegenerate: boolean;
 };
 
 // De ce: acest container gestionează explicit stările critice (loading, typing, error) ca integrarea cu date reale să nu spargă experiența de conversație.
-export function MessageList({ messages, isTyping, isLoading, error }: MessageListProps) {
+export function MessageList({
+  messages,
+  isTyping,
+  isLoading,
+  error,
+  onRegenerateMessage,
+  canRegenerate
+}: MessageListProps) {
+  const lastAssistantMessageId = [...messages].reverse().find(message => message.role === "assistant")?.id;
+
   if (isLoading) {
     return (
       <div className="space-y-4 px-4 py-6">
@@ -37,7 +48,13 @@ export function MessageList({ messages, isTyping, isLoading, error }: MessageLis
       ) : null}
 
       {messages.map(message => (
-        <MessageItem key={message.id} message={message} />
+        <MessageItem
+          key={message.id}
+          message={message}
+          onRegenerate={onRegenerateMessage}
+          canRegenerate={canRegenerate}
+          isLastAssistant={message.id === lastAssistantMessageId}
+        />
       ))}
 
       {isTyping ? (
