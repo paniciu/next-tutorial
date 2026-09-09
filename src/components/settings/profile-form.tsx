@@ -13,6 +13,13 @@ type ProfileFormProps = {
   onSave: (profile: UserProfile) => void;
 };
 
+const emptyProfile: UserProfile = {
+  name: "",
+  currentStack: "",
+  skills: "",
+  objective: ""
+};
+
 // De ce: ținem editarea profilului într-un formular dedicat pentru că profilul e sursa centrală de context, nu un detaliu secundar de UI.
 export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [draft, setDraft] = useState<UserProfile>(profile);
@@ -67,6 +74,25 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
       </div>
 
       <Button type="submit">Salvează profilul</Button>
+
+      <Button
+        type="button"
+        variant="destructive"
+        onClick={() => {
+          // De ce: profilul este dată personală și are nevoie de o acțiune clară de ștergere, nu doar de editare manuală.
+          setDraft(emptyProfile);
+          onSave(emptyProfile);
+        }}
+      >
+        Șterge profilul local
+      </Button>
+
+      <p className="text-xs text-muted-foreground">
+        Date personale colectate: nume, stack, skill-uri cu nivel și obiectiv. În etapa curentă datele sunt stocate
+        local în acest browser, în localStorage (cheia <span className="font-mono">skillforge-app</span>). Profilul
+        devine vizibil pentru providerul LLM doar când trimiți un mesaj în chat. Îl poți șterge aici sau din Setări
+        browser → Site data.
+      </p>
     </form>
   );
 }

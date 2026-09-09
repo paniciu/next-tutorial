@@ -1,5 +1,9 @@
 # SkillForge — cerințe de produs
 
+> Ultima actualizare: 2026-09-09
+>
+> Faza curentă: Faza 1B — persona + profil contextual în chat (livrată)
+
 ## 1. Rolul acestui document
 
 Acest fișier este sursa de adevăr pentru ce construim în proiectul **SkillForge**.
@@ -121,7 +125,7 @@ Rezultatul așteptat la finalul 1A:
 - tema se schimbă din preferințe;
 - aplicația pornește pe orice laptop fără configurare suplimentară.
 
-#### Faza 1B — integrarea LLM server-side (pasul următor)
+#### Faza 1B — integrarea LLM server-side (pasul curent)
 
 Intră în 1B:
 
@@ -132,13 +136,17 @@ Intră în 1B:
 - `system prompt` construit din profil + context;
 - păstrarea regulii că secretele rămân doar pe server.
 
-Stare implementare (2026-09-07):
+Stare implementare (2026-09-09):
 
 - chat-ul folosește streaming real prin Route Handler server-side;
 - integrarea LLM activă este Anthropic, prin AI SDK;
 - cheia `ANTHROPIC_API_KEY` este citită doar pe server;
 - clientul folosește `useChat`, fără parsare manuală de stream în UI;
-- store-ul global păstrează doar shell state (profil, setări, sumar conversații).
+- store-ul global păstrează doar shell state (profil, setări, sumar conversații);
+- persona + guardrails sunt centralizate în `src/lib/system-prompt.ts` și injectate ca `system` doar pe server;
+- profilul din preferințe este trimis la fiecare mesaj și influențează răspunsurile mentorului;
+- datele de profil venite din browser sunt normalizate server-side înainte de intrarea în prompt (whitelist câmpuri, trim, limite de lungime);
+- UI arată explicit când profilul este activ și include acțiune directă de ștergere a profilului local.
 
 ### Faza 2 — memorie și progres mai bogate
 
@@ -253,12 +261,28 @@ Profilul utilizatorului poate conține date personale sau semi-personale despre:
 - ritm de învățare;
 - eventuale note sau progres.
 
-Prin urmare:
+În implementarea curentă (Faza 1B), colectăm efectiv doar câmpurile:
 
-- trebuie minimizată expunerea inutilă a acestor date;
-- trebuie trimis către provider doar contextul necesar pentru răspuns;
-- trebuie documentat ce date persistăm și de ce;
-- trebuie evitată includerea accidentală a datelor sensibile în loguri.
+- `name`;
+- `currentStack`;
+- `skills`;
+- `objective`.
+
+Stocare și vizibilitate în etapa curentă:
+
+- profilul este stocat local, în browserul utilizatorului, prin `localStorage` (cheia `skillforge-app`), nu într-o bază de date server;
+- profilul este vizibil utilizatorului (în UI) și este transmis către providerul LLM doar în momentul trimiterii unui mesaj;
+- aplicația nu introduce în acest pas sincronizare de profil între device-uri și nici administrare centralizată de date personale.
+
+Ștergere:
+
+- utilizatorul poate șterge profilul din formularul de preferințe (acțiune dedicată);
+- alternativ, datele locale pot fi șterse din setările browserului (site data pentru aplicație).
+
+Limită de fază și risc acceptat (explicit):
+
+- această strategie local-first rămâne valabilă până la introducerea autentificării + stocării server-side (planificat în Faza 4);
+- riscul este considerat acceptabil temporar deoarece datele rămân pe dispozitivul utilizatorului, câmpurile sunt limitate la minimul necesar pentru personalizare, iar utilizatorul are control direct de ștergere.
 
 ### 11.3 Cost și portabilitate între provideri
 

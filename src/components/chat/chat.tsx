@@ -28,10 +28,15 @@ export function Chat() {
     id: activeConversationId,
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      body: {
-        selectedProvider,
-        selectedModel,
-        profile
+      // De ce: body ca funcție citește store-ul exact la momentul trimiterii și evită profilul "înghețat" de la montare.
+      body: () => {
+        const state = useAppStore.getState();
+
+        return {
+          selectedProvider: state.selectedProvider,
+          selectedModel: state.selectedModel,
+          profile: state.profile
+        };
       }
     })
   });
@@ -114,7 +119,7 @@ export function Chat() {
       ) : (
         <div className="flex flex-1 items-center justify-center px-4">
           <div className="w-full max-w-3xl space-y-6">
-            <EmptyState name={profile.name} onUseSuggestion={setDraft} />
+            <EmptyState name={profile.name} objective={profile.objective} onUseSuggestion={setDraft} />
             <ChatInput
               value={draft}
               onChange={setDraft}
