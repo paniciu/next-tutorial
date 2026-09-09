@@ -10,7 +10,7 @@ export async function GET() {
     helloTarget: helloTarget ?? null,
     message: helloTarget
       ? `Salut din server, ${helloTarget}!`
-      : "Variabila SKILLFORGE_HELLO_TARGET nu este setată încă în .env.local.",
+      : "Variabila SKILLFORGE_HELLO_TARGET nu este setată încă pe server (local sau platforma de deploy).",
     nextStep:
       "Pe aceeași formă de rută vom construi mai târziu endpoint-ul /api/chat, unde serverul va citi cheia providerului și va transmite răspunsul în streaming."
   });

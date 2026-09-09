@@ -15,4 +15,14 @@ for file in "$ROOT_DIR/CLAUDE.md" "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/.github/copil
   fi
 done
 
+if ! grep -q "\.claude/skills/" "$ROOT_DIR/AGENTS.md"; then
+  echo "Missing skills convention reference in: $ROOT_DIR/AGENTS.md" >&2
+  exit 1
+fi
+
+if ! grep -q "pre-deploy" "$ROOT_DIR/AGENTS.md"; then
+  echo "Missing pre-deploy definition of done in: $ROOT_DIR/AGENTS.md" >&2
+  exit 1
+fi
+
 echo "Agent instruction files look structurally valid"

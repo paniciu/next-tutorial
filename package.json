@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "sync:skills": "sh scripts/sync-skills.sh",
+    "sync:skills:check": "sh scripts/sync-skills.sh --check"
   },
   "repository": {
     "type": "git",

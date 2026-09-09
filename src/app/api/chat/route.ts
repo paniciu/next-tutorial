@@ -12,9 +12,10 @@ export async function POST(request: Request) {
   if (!apiKey) {
     return Response.json(
       {
-        error: "Cheia ANTHROPIC_API_KEY lipsește pe server. Adaug-o în .env.local și repornește aplicația."
+        error:
+          "Provider neconfigurat: variabila ANTHROPIC_API_KEY nu este setată pe server. Configureaz-o în Environment Variables (Preview + Production) și apoi redeploy."
       },
-      { status: 400 }
+      { status: 503 }
     );
   }
 

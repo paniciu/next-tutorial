@@ -43,7 +43,7 @@ export function Chat() {
 
   const isAssistantTyping = status === "submitted" || status === "streaming";
   const chatError = error
-    ? "Nu am putut genera răspunsul acum. Verifică cheia ANTHROPIC_API_KEY pe server și încearcă din nou."
+    ? "Nu am putut genera răspunsul acum. Dacă providerul nu e configurat încă, aplicația rămâne funcțională, dar chat-ul va porni după ce setezi variabilele în platforma de deploy și faci redeploy."
     : null;
 
   const selectedProviderLabel = useMemo(() => {

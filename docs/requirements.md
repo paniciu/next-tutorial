@@ -2,7 +2,7 @@
 
 > Ultima actualizare: 2026-09-09
 >
-> Faza curentă: Faza 1B — persona + profil contextual în chat (livrată)
+> Faza curentă: Faza 1C — deploy timpuriu pe Vercel + rutină pre-deploy (în curs)
 
 ## 1. Rolul acestui document
 
@@ -98,11 +98,11 @@ Aplicația trebuie să permită utilizatorului să:
 
 ## 8. Cerințe funcționale pe faze
 
-### Faza 1 — fundația aplicației (acum)
+### Faza 1 — fundația aplicației + deploy timpuriu (acum)
 
 Obiectiv: să existe o aplicație web complet navigabilă și publicabilă înainte de orice integrare LLM reală.
 
-Faza 1 este împărțită în doi pași de curs:
+Faza 1 este împărțită în trei pași de curs:
 
 #### Faza 1A — UI complet pe date inventate (pasul curent)
 
@@ -148,6 +148,21 @@ Stare implementare (2026-09-09):
 - datele de profil venite din browser sunt normalizate server-side înainte de intrarea în prompt (whitelist câmpuri, trim, limite de lungime);
 - UI arată explicit când profilul este activ și include acțiune directă de ștergere a profilului local.
 
+#### Faza 1C — deploy timpuriu pe Vercel (pasul curent)
+
+Intră în 1C:
+
+- repository-ul este publicat pe GitHub și importat în Vercel, pe setările implicite Next.js (fără `vercel.json` cât timp nu este necesar);
+- fiecare push pe branch produce Preview URL; branch-ul `main` produce versiunea publică (Production URL);
+- variabilele de mediu sunt configurate în Vercel pentru ambele medii: Preview și Production;
+- aplicația face build și pornește și fără chei LLM (stare normală: „provider neconfigurat”, fără crash);
+- validările de variabile rulează la request, în interiorul handlerelor server-side, nu la importul modulelor;
+- documentația include pașii manuali reali de deploy + o rutină pre-deploy reproductibilă.
+
+Regulă operațională explicită în 1C:
+
+- după orice adăugare/modificare de variabilă în Vercel, deploy-ul existent nu preia automat valoarea; este obligatoriu Redeploy.
+
 ### Faza 2 — memorie și progres mai bogate
 
 Intră în faza 2:
@@ -175,11 +190,15 @@ Poate include ulterior:
 
 - autentificare completă;
 - mai multe profile sau workspace-uri;
-- analytics și observabilitate;
+- monitorizare, analytics și observabilitate;
 - compararea providerilor în interfață;
 - cost tracking per utilizator sau per sesiune;
 - export/import de profil și plan;
-- deployment public stabil.
+
+Notă de urmă pentru schimbarea de scope (2026-09-09):
+
+- cerința „deployment public stabil” a fost mutată din Faza 4 în Faza 1C pentru a forța publicarea devreme;
+- în Faza 4 rămân activitățile de monitorizare/observabilitate după ce aplicația este deja publică.
 
 ## 9. Ce NU intră acum
 

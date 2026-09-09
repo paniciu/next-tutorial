@@ -42,6 +42,18 @@ write_file "$CLAUDE_FILE" "# CLAUDE.md" "This file defines repository-level inst
 
 write_file "$AGENTS_FILE" "# AGENTS.md" "Shared instructions for all coding agents working in this repository.
 
+## Skills convention
+
+- Skill source of truth: .claude/skills/
+- Copilot mirror: .github/skills/
+- Keep mirrors synchronized with sh scripts/sync-skills.sh.
+- Validate synchronization with sh scripts/sync-skills.sh --check.
+
+## Definition of done before publish
+
+- Run skill pre-deploy before each publish.
+- Run sh scripts/sync-agent-instructions.sh after agent-instruction edits.
+
 ## Agent-specific notes
 
 - Use small, explainable modules.

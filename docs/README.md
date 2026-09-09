@@ -13,3 +13,4 @@ Tabelul rămâne gol până când apare prima integrare reală și trebuie compl
 | integrare          | la ce pas a intrat | link                                              |
 | ------------------ | ------------------ | ------------------------------------------------- |
 | Anthropic (AI SDK) | Faza 1B            | [docs/anthropic/README.md](./anthropic/README.md) |
+| Vercel             | Faza 1C            | [docs/vercel/README.md](./vercel/README.md)       |
