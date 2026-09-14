@@ -1,8 +1,8 @@
 # SkillForge — cerințe de produs
 
-> Ultima actualizare: 2026-09-09
+> Ultima actualizare: 2026-09-14
 >
-> Faza curentă: Faza 1D — acțiuni pe conversație + export JSON/Markdown (în curs)
+> Faza curentă: Faza 1D — acțiuni pe conversație + export + persistență conversații (în curs)
 
 ## 1. Rolul acestui document
 
@@ -179,6 +179,14 @@ Nu intră încă în 1D (amânat explicit):
 - export PDF;
 - editarea mesajelor după trimitere.
 
+Decizie de arhitectură adăugată în 1D (2026-09-14):
+
+- cât timp răspunsul asistentului este în streaming, mesajele sunt deținute de `useChat` (stare tranzitorie, foarte frecvent actualizată);
+- store-ul global (`Zustand` + `persist`) este arhiva conversațiilor complete, inclusiv mesajele finale;
+- sincronizarea dintre `useChat` și arhivă se face la finalul stream-ului (`ready`/`error`), nu la fiecare token;
+- la schimbarea conversației, sesiunea de chat se reinițializează prin remontare pe `key` legat de `conversationId`, ca hook-ul să pornească din mesajele acelei conversații;
+- compromis acceptat: dacă utilizatorul dă refresh în timpul streamingului, răspunsul parțial se pierde (până la persistența server-side).
+
 ### Faza 2 — memorie și progres mai bogate
 
 Intră în faza 2:
@@ -264,6 +272,23 @@ Acțiuni operaționale minime în faza curentă (1D):
 - „Copiază” este disponibil pe mesaj și confirmă reușita prin notificarea existentă;
 - „Chat nou” rămâne în sidebar și golește conversația curentă doar după confirmare;
 - exportul rămâne în meniul de header și generează JSON + Markdown din aceeași structură de date intermediară.
+
+Arhitectură de stare pentru conversații (1D):
+
+- există un singur loc persistent pentru starea care trebuie să supraviețuiască refresh-ului: store-ul global cu conversații + mesaje;
+- nu se persistă stări tranzitorii (`streaming`, `loading`, `error`) în `localStorage`;
+- componentele citesc din store doar prin selectors, pentru a limita rerender-ele inutile;
+- orice schimbare de formă în starea persistată cere `version` + `migrate`, pentru compatibilitate cu datele deja salvate.
+
+Notă de comparație pentru curs (Context vs Store):
+
+- `createContext` + `useContext` este suficient pentru valori rare, cu puțini consumatori;
+- store-ul global cu selectors este preferat pentru stare citită în multe locuri și actualizată des (ex: flux de chat).
+
+Notă de curs (limitări și compromisuri):
+
+- `localStorage` are limită practică de ordinul câtorva MB per origine, deci istoricul mare trebuie ulterior mutat server-side;
+- sincronizarea la final de streaming reduce blocajele UI, dar un răspuns întrerupt de refresh înainte de `onFinish` nu este arhivat complet.
 
 ### 10.3 Construirea contextului
 

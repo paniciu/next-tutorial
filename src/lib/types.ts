@@ -1,3 +1,5 @@
+import type { UIMessage } from "ai";
+
 export type ThemePreference = "system" | "light" | "dark";
 
 export type ResolvedTheme = "light" | "dark";
@@ -28,4 +30,5 @@ export type ConversationSummary = {
   title: string;
   createdAt: string;
   updatedAt: string;
+  messages: UIMessage[];
 };

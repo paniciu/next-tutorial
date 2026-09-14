@@ -12,7 +12,10 @@
 - SkillForge is an agent-first product with server-side LLM access, streaming, persistent profile context, and memory across sessions.
 - Never commit or document real secrets.
 - All provider and credential access must remain server-side.
-- Chat message state belongs to `useChat` in UI components; global store keeps only shell state (profile, settings, conversation summaries).
+- Chat message ownership is split by phase: while a reply streams, messages belong to `useChat`; after stream completion, the global store keeps the persisted archive (profile, settings, conversation list with messages).
+- Store reads must use selectors (for example `useAppStore(state => state.selectedProvider)`), never `useAppStore()` + destructuring.
+- Selectors must not create new objects per call unless shallow comparison is explicitly used.
+- Any persisted state shape change requires `version` + `migrate` in the persisted store config.
 - LLM provider calls are allowed only from server routes/actions, never directly from browser components.
 - System prompt persona/guardrails must be composed only on the server, only in `src/lib/system-prompt.ts`; duplicating persona composition elsewhere is an error.
 - Any data received from the browser must be normalized server-side before it is interpolated into prompts.

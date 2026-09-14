@@ -1,5 +1,6 @@
 "use client";
 
+import type { UIMessage } from "ai";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -8,23 +9,49 @@ import { mockProfile } from "@/lib/mock/profile";
 import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER_ID, providerModelOptions } from "@/lib/providers";
 import type { ConversationSummary, ResolvedTheme, ThemePreference, UserProfile } from "@/lib/types";
 
+const APP_STORE_VERSION = 2;
+const LEGACY_CHAT_MESSAGES_STORAGE_KEY = "skillforge-chat-messages";
+
 type AppState = {
   profile: UserProfile;
   selectedProvider: string;
   selectedModel: string;
   themePreference: ThemePreference;
   resolvedTheme: ResolvedTheme;
+  hasHydrated: boolean;
   conversations: ConversationSummary[];
   activeConversationId: string;
   setThemePreference: (theme: ThemePreference) => void;
   setResolvedTheme: (theme: ResolvedTheme) => void;
+  markHydrated: () => void;
   updateProfile: (patch: Partial<UserProfile>) => void;
   setProviderModel: (provider: string, model: string) => void;
   setActiveConversation: (conversationId: string) => void;
   touchConversation: (conversationId: string, titleHint?: string) => void;
+  archiveConversationMessages: (conversationId: string, messages: UIMessage[], titleHint?: string) => void;
   renameConversation: (conversationId: string, title: string) => void;
   deleteConversation: (conversationId: string) => void;
   startNewConversation: () => void;
+};
+
+type PersistedConversationV1 = {
+  id?: unknown;
+  title?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+};
+
+type PersistedConversationV2 = PersistedConversationV1 & {
+  messages?: unknown;
+};
+
+type PersistedAppStateV1 = {
+  profile?: unknown;
+  selectedProvider?: unknown;
+  selectedModel?: unknown;
+  themePreference?: unknown;
+  activeConversationId?: unknown;
+  conversations?: unknown;
 };
 
 const nowIso = () => new Date().toISOString();
@@ -33,6 +60,57 @@ const makeId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice
 
 const defaultTitle = "Conversație nouă";
 
+function readLegacyMessageArchive() {
+  if (typeof window === "undefined") {
+    return {} as Record<string, UIMessage[]>;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(LEGACY_CHAT_MESSAGES_STORAGE_KEY);
+    if (!raw) {
+      return {} as Record<string, UIMessage[]>;
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") {
+      return {} as Record<string, UIMessage[]>;
+    }
+
+    return parsed as Record<string, UIMessage[]>;
+  } catch {
+    return {} as Record<string, UIMessage[]>;
+  }
+}
+
+function normalizeConversationRecord(
+  conversation: PersistedConversationV2,
+  legacyMessages: Record<string, UIMessage[]>
+) {
+  const id =
+    typeof conversation.id === "string" && conversation.id.trim().length > 0 ? conversation.id : makeId("conv");
+  const createdAt =
+    typeof conversation.createdAt === "string" && conversation.createdAt.trim().length > 0
+      ? conversation.createdAt
+      : nowIso();
+  const updatedAt =
+    typeof conversation.updatedAt === "string" && conversation.updatedAt.trim().length > 0
+      ? conversation.updatedAt
+      : createdAt;
+  const title =
+    typeof conversation.title === "string" && conversation.title.trim().length > 0 ? conversation.title : defaultTitle;
+  const messageFromV2 = Array.isArray(conversation.messages) ? (conversation.messages as UIMessage[]) : null;
+  const messageFromLegacyStorage = legacyMessages[id] ?? [];
+
+  return {
+    id,
+    title,
+    createdAt,
+    updatedAt,
+    // De ce: la migrare păstrăm ce există deja în forma nouă; dacă venim din forma veche, recuperăm mesajele din cheia istorică separată.
+    messages: messageFromV2 ?? messageFromLegacyStorage
+  } satisfies ConversationSummary;
+}
+
 const makeConversationSummary = (title = defaultTitle): ConversationSummary => {
   const timestamp = nowIso();
 
@@ -40,13 +118,14 @@ const makeConversationSummary = (title = defaultTitle): ConversationSummary => {
     id: makeId("conv"),
     title,
     createdAt: timestamp,
-    updatedAt: timestamp
+    updatedAt: timestamp,
+    messages: []
   };
 };
 
 const initialConversation = mockConversations[0] ?? makeConversationSummary();
 
-// De ce: store-ul rămâne sursă de adevăr doar pentru shell (profil, setări, lista de conversații), iar mesajele active sunt deținute de useChat.
+// De ce: store-ul este arhiva persistentă (profil, setări, conversații + mesaje finale), iar mesajele active în timpul stream-ului rămân în useChat.
 export const useAppStore = create<AppState>()(
   persist(
     set => ({
@@ -55,10 +134,12 @@ export const useAppStore = create<AppState>()(
       selectedModel: DEFAULT_MODEL_ID,
       themePreference: "system",
       resolvedTheme: "light",
+      hasHydrated: false,
       conversations: mockConversations,
       activeConversationId: initialConversation.id,
       setThemePreference: theme => set({ themePreference: theme }),
       setResolvedTheme: theme => set({ resolvedTheme: theme }),
+      markHydrated: () => set({ hasHydrated: true }),
       updateProfile: patch => set(state => ({ profile: { ...state.profile, ...patch } })),
       setProviderModel: (provider, model) => set({ selectedProvider: provider, selectedModel: model }),
       setActiveConversation: conversationId => set({ activeConversationId: conversationId }),
@@ -78,7 +159,8 @@ export const useAppStore = create<AppState>()(
                 id: conversationId,
                 title: fallbackTitle,
                 createdAt: now,
-                updatedAt: now
+                updatedAt: now,
+                messages: []
               };
 
           const conversations = [
@@ -87,6 +169,38 @@ export const useAppStore = create<AppState>()(
           ];
 
           return { conversations, activeConversationId: touchedConversation.id };
+        }),
+      archiveConversationMessages: (conversationId, messages, titleHint) =>
+        set(state => {
+          const now = nowIso();
+          const fallbackTitle = titleHint?.split(" ").slice(0, 5).join(" ").trim() || defaultTitle;
+          const existing = state.conversations.find(item => item.id === conversationId);
+
+          const archivedConversation: ConversationSummary = existing
+            ? {
+                ...existing,
+                title: existing.title === defaultTitle && titleHint ? fallbackTitle : existing.title,
+                updatedAt: now,
+                // De ce: salvăm arhiva doar când fluxul s-a închis, ca persist să nu serializze sute de snapshot-uri intermediare.
+                messages
+              }
+            : {
+                id: conversationId,
+                title: fallbackTitle,
+                createdAt: now,
+                updatedAt: now,
+                messages
+              };
+
+          const conversations = [
+            archivedConversation,
+            ...state.conversations.filter(item => item.id !== archivedConversation.id)
+          ];
+
+          return {
+            conversations,
+            activeConversationId: archivedConversation.id
+          };
         }),
       renameConversation: (conversationId, title) =>
         set(state => ({
@@ -122,7 +236,34 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "skillforge-app",
+      version: APP_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
+      migrate: persistedState => {
+        const legacyState = (persistedState ?? {}) as PersistedAppStateV1;
+        const persistedConversations = Array.isArray(legacyState.conversations)
+          ? (legacyState.conversations as PersistedConversationV2[])
+          : [];
+        const legacyMessages = readLegacyMessageArchive();
+        const migratedConversations = persistedConversations.map(conversation =>
+          normalizeConversationRecord(conversation, legacyMessages)
+        );
+        const fallbackConversation = migratedConversations[0] ?? makeConversationSummary();
+
+        if (typeof window !== "undefined") {
+          // De ce: după ce am absorbit datele din cheia veche, o eliminăm ca să evităm divergențe la următoarele porniri.
+          window.localStorage.removeItem(LEGACY_CHAT_MESSAGES_STORAGE_KEY);
+        }
+
+        return {
+          ...legacyState,
+          conversations: migratedConversations.length > 0 ? migratedConversations : [fallbackConversation],
+          activeConversationId:
+            typeof legacyState.activeConversationId === "string" &&
+            migratedConversations.some(item => item.id === legacyState.activeConversationId)
+              ? legacyState.activeConversationId
+              : fallbackConversation.id
+        };
+      },
       onRehydrateStorage: () => state => {
         if (!state) {
           return;
@@ -135,6 +276,8 @@ export const useAppStore = create<AppState>()(
         if (!isValidSelection) {
           state.setProviderModel(DEFAULT_PROVIDER_ID, DEFAULT_MODEL_ID);
         }
+
+        state.markHydrated();
       },
       partialize: state => ({
         profile: state.profile,

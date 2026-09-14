@@ -36,24 +36,10 @@ export function Chat({
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const [draft, setDraft] = useState("");
-  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
   const profile = useAppStore(state => state.profile);
 
   const isAssistantTyping = status === "submitted" || status === "streaming";
-
-  useEffect(() => {
-    const startId = window.setTimeout(() => {
-      setIsLoadingConversation(Boolean(activeConversationId));
-    }, 0);
-
-    const timeoutId = window.setTimeout(() => setIsLoadingConversation(false), 320);
-
-    return () => {
-      window.clearTimeout(startId);
-      window.clearTimeout(timeoutId);
-    };
-  }, [activeConversationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -78,7 +64,7 @@ export function Chat({
             <MessageList
               messages={messages}
               isTyping={isAssistantTyping}
-              isLoading={isLoadingConversation}
+              isLoading={false}
               error={error}
               onRegenerateMessage={onRegenerateMessage}
               canRegenerate={!isAssistantTyping}
