@@ -2,7 +2,7 @@
 
 > Ultima actualizare: 2026-09-14
 >
-> Faza curentă: Faza 1D — acțiuni pe conversație + export + persistență + reimplementare temă (în curs)
+> Faza curentă: Faza 1D — finisaje UX (livrată)
 
 ## 1. Rolul acestui document
 
@@ -163,21 +163,17 @@ Regulă operațională explicită în 1C:
 
 - după orice adăugare/modificare de variabilă în Vercel, deploy-ul existent nu preia automat valoarea; este obligatoriu Redeploy.
 
-#### Faza 1D — acțiuni pe conversație + export JSON/Markdown (pasul curent)
+#### Faza 1D — finisaje UX: markdown rendering stream live + indicator status + editare (livrată 2026-09-14)
 
-Intră în 1D:
+Intră în 1D: răspunsuri ca Markdown cu titluri, liste, tabele, cod cu highlighting selectiv; butoane copiere pe cod; indicator din status real; mesaje utilizator instant + editabile (editare taie și retrimite de la mesaj în jos); link-uri `target="_blank"` + `rel="noopener noreferrer"`; Markdown incomplet fără eroare; ⚠️ **HTML brut din model NU se randează, `dangerouslySetInnerHTML` DOAR pe highlight.js.**
 
-- utilizatorul poate porni „Chat nou” din sidebar, cu confirmare înainte de golirea conversației curente;
-- utilizatorul poate folosi „Mai încearcă” pe ultimul răspuns al asistentului, iar răspunsul vechi este înlocuit (nu duplicat);
-- utilizatorul poate copia textul unui mesaj direct din acțiunile pe mesaj, cu confirmare vizuală (toast);
-- acțiunile per mesaj apar la hover și rămân locale mesajului (fără toolbar global deasupra conversației);
-- utilizatorul poate exporta conversația curentă din meniul de header în două formate: JSON și Markdown;
-- exportul include profilul, mesajele și data exportului, într-un fișier lizibil și reutilizabil.
+Dependențe noi: `remark`, `remark-react`, `unified`, `highlight.js`.
 
-Nu intră încă în 1D (amânat explicit):
+Fișiere noi: `src/components/chat/markdown.tsx`. Modificate: `message-item.tsx`, `message-list.tsx`, `chat.tsx`, `message-utils.ts`.
 
-- export PDF;
-- editarea mesajelor după trimitere.
+Acțiuni confirmate: „Mai încearcă" (regenerare ultimul răspuns); „Copiază" (cu context check); export JSON+Markdown.
+
+Nu intră în 1D: export PDF; persistență server; editarea răspunsurilor asistentului.
 
 Decizie de arhitectură adăugată în 1D (2026-09-14):
 

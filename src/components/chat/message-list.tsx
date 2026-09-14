@@ -13,17 +13,23 @@ type MessageListProps = {
   isLoading: boolean;
   error: string | null;
   onRegenerateMessage: (messageId: string) => Promise<void>;
+  onEditAndResendMessage: (messageId: string, newContent: string) => Promise<void>;
   canRegenerate: boolean;
+  canEdit: boolean;
 };
 
-// De ce: acest container gestionează explicit stările critice (loading, typing, error) ca integrarea cu date reale să nu spargă experiența de conversație.
+// De ce: container-ul gestionează explicit stările critice (loading, typing, error) și paseaza
+// callback-uri pentru editare și regenerare. Mesajele care curg din streaming apăreau ca plain text,
+// acum se randează cu markdown și sunt editabile.
 export function MessageList({
   messages,
   isTyping,
   isLoading,
   error,
   onRegenerateMessage,
-  canRegenerate
+  onEditAndResendMessage,
+  canRegenerate,
+  canEdit
 }: MessageListProps) {
   const lastAssistantMessageId = [...messages].reverse().find(message => message.role === "assistant")?.id;
 
@@ -52,7 +58,9 @@ export function MessageList({
           key={message.id}
           message={message}
           onRegenerate={onRegenerateMessage}
+          onEditAndResend={onEditAndResendMessage}
           canRegenerate={canRegenerate}
+          canEdit={canEdit}
           isLastAssistant={message.id === lastAssistantMessageId}
         />
       ))}

@@ -85,14 +85,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
 
     const mediaQuery = window.matchMedia(THEME_MEDIA_QUERY);
-    setSystemPrefersDark(mediaQuery.matches);
 
-    const handleChange = (event: MediaQueryListEvent) => {
-      setSystemPrefersDark(event.matches);
+    // De ce: init state cu valoarea curentă, dar se face după render ca să nu triggere cascading renders.
+    const handleInitAndChange = (event?: MediaQueryListEvent) => {
+      setSystemPrefersDark(event ? event.matches : mediaQuery.matches);
     };
 
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
+    // Inițializare
+    handleInitAndChange();
+
+    mediaQuery.addEventListener("change", handleInitAndChange);
+    return () => mediaQuery.removeEventListener("change", handleInitAndChange);
   }, [themePreference]);
 
   const contextValue = useMemo(

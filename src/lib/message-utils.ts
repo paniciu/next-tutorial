@@ -126,3 +126,15 @@ export function serializeConversationExportMarkdown(
 
   return lines.join("\n");
 }
+
+// De ce: când utilizatorul editează un mesaj, tăiem conversația de la acel mesaj în jos.
+// Aceasta previne contradicțiile istorice și asigură că modelul primește un context coerent.
+export function trimMessagesAfterIndex(messages: UIMessage[], messageId: string): UIMessage[] {
+  const index = messages.findIndex(m => m.id === messageId);
+  if (index === -1) {
+    return messages;
+  }
+
+  // Ștergem mesajul editat și orice apare după el.
+  return messages.slice(0, index);
+}

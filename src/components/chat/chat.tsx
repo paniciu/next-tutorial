@@ -56,6 +56,20 @@ export function Chat({
     await onSendMessage(content);
   };
 
+  // De ce: editare unui mesaj al utilizatorului taie conversația de la acel mesaj în jos
+  // (inclusiv răspunsul care urma) și retrimite din nou. Aceasta asigură că modelul
+  // primește un istoric coerent, fără fire paralele. Editarea nu e disponibilă în timp ce
+  // răspunsul curge (cât timp isAssistantTyping = true).
+  const handleEditAndResend = async (messageId: string, newContent: string) => {
+    if (isAssistantTyping) {
+      return;
+    }
+
+    // De ce: simulez trimiterea: pun draft-ul și apelez handleSubmit ca să merg pe fluxul normal.
+    setDraft(newContent);
+    await onSendMessage(newContent);
+  };
+
   return (
     <section className="flex min-h-[calc(100svh-56px)] flex-col">
       {messages.length > 0 ? (
@@ -67,7 +81,9 @@ export function Chat({
               isLoading={false}
               error={error}
               onRegenerateMessage={onRegenerateMessage}
+              onEditAndResendMessage={handleEditAndResend}
               canRegenerate={!isAssistantTyping}
+              canEdit={!isAssistantTyping}
             />
             <div ref={bottomRef} />
           </ScrollArea>

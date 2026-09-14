@@ -28,6 +28,20 @@
 - Every external integration must include `docs/<integration>/README.md` with manual setup, environment variables, dashboard configuration, pricing, and official links.
 - Every external integration must also update `docs/README.md` in the same commit with the integration name, the course step, and the new documentation link.
 
+## Security Rule: Content from Model is User Input (Phase 1D, 2026-09-14)
+
+⚠️ **Content from the LLM response must be treated as untrusted user input.**
+
+- HTML rendering from model responses is **strictly forbidden**. `dangerouslySetInnerHTML` is **NOT ALLOWED** on any model-sourced data.
+- Markdown rendering must be centralized in **one component only**: `src/components/chat/markdown.tsx`. This is the single entry point for rendering model output.
+- The Markdown component rejects HTML plugins and uses React components for all markdown elements (headers, lists, tables, links).
+- Syntax highlighting from `highlight.js` is the only exception where `dangerouslySetInnerHTML` is used, because the HTML is generated internally, not interpolated from model output.
+- All links in rendered content must include `target="_blank"` and `rel="noopener noreferrer"` to prevent XSS via `window.opener`.
+- Incomplete Markdown (unclosed code fences, partial tables) must not throw errors — remark parses best-effort to support streaming responses.
+- Every new content-rendering integration (API responses, user input, model output) must be audited for XSS vectors.
+
+**Rationale**: The classic attack vector in chat applications is `<img onerror=...>` written by the model or injected into the model from external documents, becoming XSS in your app. Strict content treatment is the primary defense.
+
 <!-- END SHARED RULES -->
 
 Shared instructions for all coding agents working in this repository.
