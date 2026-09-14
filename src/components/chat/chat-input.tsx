@@ -3,8 +3,10 @@
 import { useEffect, useRef } from "react";
 import { Plus, Send, Square } from "lucide-react";
 
+import { ProviderSelector } from "@/components/chat/provider-selector";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import type { ProviderId } from "@/lib/types";
 
 type ChatInputProps = {
   value: string;
@@ -15,6 +17,11 @@ type ChatInputProps = {
   providerLabel: string;
   modelLabel: string;
   focusKey: string;
+  selectedProviderId: ProviderId;
+  selectedModelId: string;
+  onProviderChange: (providerId: ProviderId) => void;
+  onModelChange: (modelId: string) => void;
+  providerDisabledReasons: Record<ProviderId, string | null>;
 };
 
 // De ce: composer-ul este separat pentru că va deveni punctul cu cele mai multe reguli de interacțiune când adăugăm streaming și atașamente.
@@ -26,7 +33,12 @@ export function ChatInput({
   isTyping,
   providerLabel,
   modelLabel,
-  focusKey
+  focusKey,
+  selectedProviderId,
+  selectedModelId,
+  onProviderChange,
+  onModelChange,
+  providerDisabledReasons
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -64,19 +76,32 @@ export function ChatInput({
         }}
       />
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="Atașamente (în curând)">
-          <Plus className="size-4" />
-        </Button>
+      <div className="mt-3 flex flex-col gap-3">
+        {/* De ce: selectorul de provider și model stă în composer, unde se face decizia de trimisie.
+        Fiecare mesaj trimis stie exact cu ce provider a fost trimis, porque selectoarele
+        trimit ID-urile la fiecare apel onSendMessage. */}
+        <ProviderSelector
+          selectedProviderId={selectedProviderId}
+          selectedModelId={selectedModelId}
+          onProviderChange={onProviderChange}
+          onModelChange={onModelChange}
+          providerDisabledReasons={providerDisabledReasons}
+        />
 
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-muted-foreground">
-            {providerLabel} · {modelLabel}
-          </p>
-          <Button type="button" size="sm" onClick={isTyping ? onStop : onSubmit}>
-            {isTyping ? <Square className="size-3.5" /> : <Send className="size-3.5" />}
-            {isTyping ? "Stop" : "Send"}
+        <div className="flex items-center justify-between gap-3">
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="Atașamente (în curând)">
+            <Plus className="size-4" />
           </Button>
+
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">
+              {providerLabel} · {modelLabel}
+            </p>
+            <Button type="button" size="sm" onClick={isTyping ? onStop : onSubmit}>
+              {isTyping ? <Square className="size-3.5" /> : <Send className="size-3.5" />}
+              {isTyping ? "Stop" : "Send"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

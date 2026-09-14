@@ -2,7 +2,7 @@
 
 > Ultima actualizare: 2026-09-14
 >
-> Faza curentă: Faza 1D — finisaje UX (livrată)
+> Faza curentă: Faza 1D — selecție provider (parțial livrată)
 
 ## 1. Rolul acestui document
 
@@ -182,6 +182,25 @@ Decizie de arhitectură adăugată în 1D (2026-09-14):
 - sincronizarea dintre `useChat` și arhivă se face la finalul stream-ului (`ready`/`error`), nu la fiecare token;
 - la schimbarea conversației, sesiunea de chat se reinițializează prin remontare pe `key` legat de `conversationId`, ca hook-ul să pornească din mesajele acelei conversații;
 - compromis acceptat: dacă utilizatorul dă refresh în timpul streamingului, răspunsul parțial se pierde (până la persistența server-side).
+
+**Adăugare 2026-09-14 (parțial livrată în aceeași fază):**
+
+Selectorul de provider și model: utilizatorul poate alege cu ce AI răspunde aplicația direct din interfață (lângă caseta de scris), nu din preferințe. Ordinea din interfață e ordinea din registru (`PROVIDER_REGISTRY`), Anthropic implicit și prim.
+
+Intră: comutare Claude ↔ GPT-4o Mini pe mesaj; provider-ul dezactivat apare cu motiv; abstracție prin `getModel()` pe server (SDK-ul instanțiat doar acolo); validare modelId contra registrului.
+
+Nu intră: tracking cost/tokeni; comparație modele; prețuri.
+
+Fișiere noi: `src/lib/providers.server.ts` (funcții server-side cu SDK); `src/components/chat/provider-selector.tsx`; `src/app/api/providers/route.ts` (status endpoint). Modificate: `chat-input.tsx`, `chat.tsx`, `app-shell.tsx`, `app.api.chat.route.ts`, `providers.ts`.
+
+Model nou: OpenAI `gpt-4o-mini`. Documentație: [docs/openai/README.md](./openai/README.md).
+
+Regulă nouă (arhitectură):
+
+- `providers.ts` ajunge în browser, nu are voie să atingă `process.env` sau cheile;
+- tot ce ține de chei și SDK stă în `providers.server.ts`, server-only;
+- `getModel(providerId, modelId)` e singurul loc din app care instanțiază un SDK de provider;
+- disponibilitatea se calculează pe server și trimis ca date de afișat la UI, niciodată ca valoare de cheie.
 
 Decizie de arhitectură adăugată în 1D (2026-09-14, pas didactic tema):
 

@@ -10,11 +10,18 @@ type ProviderRegistryEntry = {
 };
 
 // De ce: ținem registry-ul de provider/model într-un singur fișier ca ruta de server și UI-ul să nu poată devia pe ID-uri diferite.
+// ATENȚIE: fișierul providers.ts ajunge în browser. Nu pune aici nicio cheie și nici apeluri la process.env.
+// Toda ce ține de chei și SDK stă în providers.server.ts.
 export const PROVIDER_REGISTRY: ProviderRegistryEntry[] = [
   {
     id: "anthropic",
     label: "Anthropic",
     models: [{ id: "claude-haiku-4-5", label: "Claude Haiku 4.5" }]
+  },
+  {
+    id: "openai",
+    label: "OpenAI",
+    models: [{ id: "gpt-4o-mini", label: "GPT-4o Mini" }]
   }
 ];
 

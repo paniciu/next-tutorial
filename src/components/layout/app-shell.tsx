@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ import {
   serializeConversationExportMarkdown
 } from "@/lib/message-utils";
 import { getProviderModelLabel } from "@/lib/providers";
-import type { ConversationSummary } from "@/lib/types";
+import type { ConversationSummary, ProviderId } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
 
 function toFileSafeIso(date: Date) {
@@ -47,6 +47,11 @@ type ConversationSessionProps = {
 // De ce: useChat deține doar sesiunea activă și construiește răspunsul token cu token; la final, snapshot-ul complet merge în arhiva din store.
 function ConversationSession({ activeConversation }: ConversationSessionProps) {
   const lastArchivedSnapshotRef = useRef(JSON.stringify(activeConversation.messages));
+  const [providerDisabledReasons, setProviderDisabledReasons] = useState<Record<ProviderId, string | null>>({
+    anthropic: null,
+    openai: null,
+    google: null
+  });
 
   const profile = useAppStore(state => state.profile);
   const selectedProvider = useAppStore(state => state.selectedProvider);
@@ -54,6 +59,32 @@ function ConversationSession({ activeConversation }: ConversationSessionProps) {
   const archiveConversationMessages = useAppStore(state => state.archiveConversationMessages);
   const touchConversation = useAppStore(state => state.touchConversation);
   const startNewConversation = useAppStore(state => state.startNewConversation);
+
+  // De ce: la montare, fetch-ez starea fiecărui provider de pe server.
+  // Asta e singurul loc din app care spune UI-ului ce e configurat. Nu calculez din browser.
+  useEffect(() => {
+    const fetchProviderStatus = async () => {
+      try {
+        const response = await fetch("/api/providers");
+        if (!response.ok) {
+          console.error("Nu s-a putut obține starea provider-elor");
+          return;
+        }
+
+        const data: Record<ProviderId, { available: boolean; reason: string | null }> = await response.json();
+        const reasons: Record<ProviderId, string | null> = {
+          anthropic: data.anthropic?.available ? null : (data.anthropic?.reason ?? "Neconfigurat"),
+          openai: data.openai?.available ? null : (data.openai?.reason ?? "Neconfigurat"),
+          google: data.google?.available ? null : (data.google?.reason ?? "Neconfigurat")
+        };
+        setProviderDisabledReasons(reasons);
+      } catch (error) {
+        console.error("Eroare la fetch provider status:", error);
+      }
+    };
+
+    fetchProviderStatus();
+  }, []);
 
   const { messages, sendMessage, stop, status, error, regenerate, setMessages } = useChat({
     id: activeConversation.id,
@@ -193,6 +224,7 @@ function ConversationSession({ activeConversation }: ConversationSessionProps) {
           activeConversationId={activeConversation.id}
           providerLabel={selectedProviderLabel}
           modelLabel={selectedModelLabel}
+          providerDisabledReasons={providerDisabledReasons}
         />
       </SidebarInset>
     </SidebarProvider>

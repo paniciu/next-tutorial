@@ -1,37 +1,39 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, streamText } from "ai";
 
-import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER_ID } from "@/lib/providers";
+import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER_ID, PROVIDER_REGISTRY } from "@/lib/providers";
+import { getModel, isProviderConfigured } from "@/lib/providers.server";
 import { buildSystemPrompt } from "@/lib/system-prompt";
+import type { ProviderId } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  if (!apiKey) {
-    return Response.json(
-      {
-        error:
-          "Provider neconfigurat: variabila ANTHROPIC_API_KEY nu este setată pe server. Configureaz-o în Environment Variables (Preview + Production) și apoi redeploy."
-      },
-      { status: 503 }
-    );
-  }
-
-  if (DEFAULT_PROVIDER_ID !== "anthropic") {
-    return Response.json({ error: "Providerul implicit nu este compatibil cu ruta de chat curentă." }, { status: 500 });
-  }
-
   try {
     const body = await request.json();
     const messages = Array.isArray(body?.messages) ? body.messages : [];
     const profile = body?.profile;
+    // De ce: provider-ul și modelul vin din client cu fiecare mesaj. Validez contra registrului
+    // și cad pe implicit dacă nu sunt valide sau dacă client-ul a trimis ceva neașteptat.
+    const providerId: ProviderId = body?.providerId ?? DEFAULT_PROVIDER_ID;
+    const modelId: string = body?.modelId ?? DEFAULT_MODEL_ID;
 
-    const anthropic = createAnthropic({ apiKey });
+    // De ce: verific dacă provider-ul cerut e configurat. Dacă nu, returnez 400 cu mesaj clar.
+    if (!isProviderConfigured(providerId)) {
+      const providerLabel = PROVIDER_REGISTRY.find(p => p.id === providerId)?.label || providerId;
+      return Response.json(
+        {
+          error: `Provider ${providerLabel} nu este configurat: variabila API Key nu este setată pe server. Configureaz-o în Environment Variables (Preview + Production) și apoi redeploy.`
+        },
+        { status: 400 }
+      );
+    }
+
+    // De ce: getModel validează modelId contra registrului și cade pe implicit dacă nu e valid.
+    // Întoarce SDK-ul instanțiat cu cheia API. E singurul loc din app care face asta.
+    const model = getModel(providerId, modelId);
 
     const result = streamText({
-      model: anthropic(DEFAULT_MODEL_ID),
+      model,
       // De ce: system prompt-ul este construit exclusiv pe server, ca să nu poată fi citit sau suprascris din browser.
       system: buildSystemPrompt(profile),
       messages: await convertToModelMessages(messages)

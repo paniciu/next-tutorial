@@ -7,6 +7,8 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { EmptyState } from "@/components/chat/empty-state";
 import { MessageList } from "@/components/chat/message-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DEFAULT_MODEL_ID, PROVIDER_REGISTRY } from "@/lib/providers";
+import type { ProviderId } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
 
 type ChatProps = {
@@ -19,6 +21,7 @@ type ChatProps = {
   activeConversationId: string;
   providerLabel: string;
   modelLabel: string;
+  providerDisabledReasons: Record<ProviderId, string | null>;
 };
 
 // De ce: orchestratorul de chat ține împreună fluxul mesajelor și stările tranzitorii, ca subcomponentele să rămână mici și explicabile.
@@ -31,13 +34,17 @@ export function Chat({
   onRegenerateMessage,
   activeConversationId,
   providerLabel,
-  modelLabel
+  modelLabel,
+  providerDisabledReasons
 }: ChatProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const [draft, setDraft] = useState("");
 
   const profile = useAppStore(state => state.profile);
+  const selectedProvider = useAppStore(state => state.selectedProvider);
+  const selectedModel = useAppStore(state => state.selectedModel);
+  const setProviderModel = useAppStore(state => state.setProviderModel);
 
   const isAssistantTyping = status === "submitted" || status === "streaming";
 
@@ -98,6 +105,15 @@ export function Chat({
               providerLabel={providerLabel}
               modelLabel={modelLabel}
               focusKey={`${activeConversationId}-${status}`}
+              selectedProviderId={selectedProvider as ProviderId}
+              selectedModelId={selectedModel}
+              onProviderChange={(newProviderId: ProviderId) => {
+                const provider = PROVIDER_REGISTRY.find(p => p.id === newProviderId);
+                const firstModelId = provider?.models[0]?.id ?? DEFAULT_MODEL_ID;
+                setProviderModel(newProviderId, firstModelId);
+              }}
+              onModelChange={(modelId: string) => setProviderModel(selectedProvider as ProviderId, modelId)}
+              providerDisabledReasons={providerDisabledReasons}
             />
           </div>
         </>
@@ -114,6 +130,15 @@ export function Chat({
               providerLabel={providerLabel}
               modelLabel={modelLabel}
               focusKey={`${activeConversationId}-${status}`}
+              selectedProviderId={selectedProvider as ProviderId}
+              selectedModelId={selectedModel}
+              onProviderChange={(newProviderId: ProviderId) => {
+                const provider = PROVIDER_REGISTRY.find(p => p.id === newProviderId);
+                const firstModelId = provider?.models[0]?.id ?? DEFAULT_MODEL_ID;
+                setProviderModel(newProviderId, firstModelId);
+              }}
+              onModelChange={(modelId: string) => setProviderModel(selectedProvider as ProviderId, modelId)}
+              providerDisabledReasons={providerDisabledReasons}
             />
           </div>
         </div>

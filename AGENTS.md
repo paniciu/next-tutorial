@@ -42,6 +42,22 @@
 
 **Rationale**: The classic attack vector in chat applications is `<img onerror=...>` written by the model or injected into the model from external documents, becoming XSS in your app. Strict content treatment is the primary defense.
 
+## Architecture Rule: Provider Abstraction and SDK Location (Phase 1D, 2026-09-14)
+
+⚠️ **Provider selection and SDK instantiation follow strict rules to scale cleanly across multiple LLM providers.**
+
+- `src/lib/providers.ts` reaches the browser and **must NOT touch `process.env` or API keys**. It defines only: `PROVIDER_REGISTRY` (list of providers + models), `DEFAULT_PROVIDER_ID`, helpers to format labels.
+- All provider credentials, SDK instantiation, and availability checks live in `src/lib/providers.server.ts` (server-only).
+- `getModel(providerId, modelId)` in `providers.server.ts` is the **single source of truth** for SDK instantiation. It validates `modelId` against the registry and falls back to the provider's default if invalid.
+- `isProviderConfigured(providerId)` checks if an API key exists; it returns a boolean, never the key itself or a string value from the browser.
+- Each API key is accessed exactly once in the switch in `providers.server.ts`, never elsewhere.
+- Provider status (available/not available + reason) is fetched server-side via `GET /api/providers` and sent to the UI as data to display, never as a boolean computed in the browser.
+- The chat input sends `providerId` and `modelId` with each message; the server validates both before calling `getModel()`.
+- A provider missing a configured key returns a clear 400 error (not 503 or 500), e.g.: "Provider OpenAI not configured: OPENAI_API_KEY is not set."
+- No if-statements on `providerId` exist outside `providers.server.ts`. All routing between providers happens in the switch inside `getModel()`.
+
+**Rationale**: This pattern ensures adding a second provider touches exactly one production file (`providers.server.ts`), not chat-input, settings, or routes. The registry drives the UI; abstraction scales to N providers with linear cost.
+
 <!-- END SHARED RULES -->
 
 Shared instructions for all coding agents working in this repository.
