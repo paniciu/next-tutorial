@@ -47,9 +47,18 @@ function roleToLabel(role: UIMessage["role"]) {
 
 // De ce: extragerea textului din mesaj există într-un singur loc ca să evităm reguli duplicate între UI și export.
 export function extractMessageText(message: UIMessage) {
+  // De ce: `parts` poate fi undefined dacă mesajul e creat fără el.
+  // Cădem înapoi la proprietate `text` care s-ar putea afla pe mesaj.
+  if (!message.parts) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const textField = (message as any).text as string | undefined;
+    return (textField || "").trim() || "...";
+  }
+
   const text = message.parts
     .filter(part => part.type === "text")
-    .map(part => part.text)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map(part => (part as any).text || "")
     .join("\n")
     .trim();
 

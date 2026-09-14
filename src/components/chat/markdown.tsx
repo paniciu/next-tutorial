@@ -6,6 +6,7 @@ import remarkParse from "remark-parse";
 import remarkReact from "remark-react";
 import { toast } from "sonner";
 import hljs from "highlight.js";
+import { Fragment, createElement } from "react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ const markdown: any = unified()
   .use(remarkParse)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   .use(remarkReact as any, {
+    createElement,
+    Fragment,
     components: {
       code: CodeBlock,
       a: SafeLink,
