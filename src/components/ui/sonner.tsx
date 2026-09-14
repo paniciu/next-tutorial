@@ -3,10 +3,11 @@
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react";
 
-import { useAppStore } from "@/store/useAppStore";
+import { useTheme } from "@/components/theme/theme-provider";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const resolvedTheme = useAppStore(state => state.resolvedTheme);
+  // De ce: acesta este un override intenționat peste fișierul shadcn generat, ca toast-urile să urmeze tema din contextul intern, nu `next-themes`.
+  const { resolvedTheme } = useTheme();
 
   return (
     <Sonner

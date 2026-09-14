@@ -12,7 +12,9 @@
 - SkillForge is an agent-first product with server-side LLM access, streaming, persistent profile context, and memory across sessions.
 - Never commit or document real secrets.
 - All provider and credential access must remain server-side.
-- Chat message ownership is split by phase: while a reply streams, messages belong to `useChat`; after stream completion, the global store keeps the persisted archive (profile, settings, conversation list with messages).
+- Chat message ownership is split by phase: while a reply streams, messages belong to `useChat`; after stream completion, the global store keeps the persisted archive (profile, provider settings, conversation list with messages).
+- Theme state does not live in the global store; it is managed by the dedicated `ThemeProvider` context (`createContext` + `useContext`).
+- Theme preference persistence uses its own localStorage key: `skillforge-theme`, separated from the app store key (`skillforge-app`).
 - Store reads must use selectors (for example `useAppStore(state => state.selectedProvider)`), never `useAppStore()` + destructuring.
 - Selectors must not create new objects per call unless shallow comparison is explicitly used.
 - Any persisted state shape change requires `version` + `migrate` in the persisted store config.
@@ -22,6 +24,7 @@
 - Message transformations must live in `src/lib/message-utils.ts` as pure functions (no store access, no DOM APIs, no network calls).
 - Text extraction from chat messages must exist in one single project location and be reused by UI + exports.
 - Product UI rule: never introduce a global action bar above the conversation area; message actions stay on message hover, export stays in header menu, new chat stays in sidebar.
+- Manual edits under `src/components/ui/` are generally forbidden, except `src/components/ui/sonner.tsx` where the toaster must consume the app theme context (documented shadcn exception).
 - Every external integration must include `docs/<integration>/README.md` with manual setup, environment variables, dashboard configuration, pricing, and official links.
 - Every external integration must also update `docs/README.md` in the same commit with the integration name, the course step, and the new documentation link.
 

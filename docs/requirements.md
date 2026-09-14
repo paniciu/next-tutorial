@@ -2,7 +2,7 @@
 
 > Ultima actualizare: 2026-09-14
 >
-> Faza curentă: Faza 1D — acțiuni pe conversație + export + persistență conversații (în curs)
+> Faza curentă: Faza 1D — acțiuni pe conversație + export + persistență + reimplementare temă (în curs)
 
 ## 1. Rolul acestui document
 
@@ -187,6 +187,14 @@ Decizie de arhitectură adăugată în 1D (2026-09-14):
 - la schimbarea conversației, sesiunea de chat se reinițializează prin remontare pe `key` legat de `conversationId`, ca hook-ul să pornească din mesajele acelei conversații;
 - compromis acceptat: dacă utilizatorul dă refresh în timpul streamingului, răspunsul parțial se pierde (până la persistența server-side).
 
+Decizie de arhitectură adăugată în 1D (2026-09-14, pas didactic tema):
+
+- preferința de temă (`system` / `light` / `dark`) iese din store-ul global și este gestionată prin `createContext` + `useContext`, cu provider dedicat;
+- regula de rezolvare a temei efective rămâne unică și pură (funcție exportată separat);
+- la runtime, puntea spre CSS rămâne clasa `.dark` pe `html` + `color-scheme`, iar tema se aplică înainte de primul paint prin script sincron în `layout`;
+- cheia de persistență pentru temă este separată (`skillforge-theme`), distinctă de cheia store-ului aplicației;
+- motivație: comparație practică Store vs Context pe cod real; contextul rezolvă transmiterea stării, nu optimizarea rerender-elor.
+
 ### Faza 2 — memorie și progres mai bogate
 
 Intră în faza 2:
@@ -284,6 +292,7 @@ Notă de comparație pentru curs (Context vs Store):
 
 - `createContext` + `useContext` este suficient pentru valori rare, cu puțini consumatori;
 - store-ul global cu selectors este preferat pentru stare citită în multe locuri și actualizată des (ex: flux de chat).
+- pentru tema aplicației, frecvența mică de schimbare și numărul redus de consumatori fac contextul o alegere adecvată didactic.
 
 Notă de curs (limitări și compromisuri):
 

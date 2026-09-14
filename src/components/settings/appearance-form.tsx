@@ -2,16 +2,14 @@
 
 import { Monitor, Moon, Sun } from "lucide-react";
 
+import { useTheme } from "@/components/theme/theme-provider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { ThemePreference } from "@/lib/types";
-
-type AppearanceFormProps = {
-  value: ThemePreference;
-  onChange: (theme: ThemePreference) => void;
-};
+import { isThemePreference } from "@/lib/theme";
 
 // De ce: izolăm alegerea de temă într-un formular separat ca singurul punct oficial de control să rămână în preferințe.
-export function AppearanceForm({ value, onChange }: AppearanceFormProps) {
+export function AppearanceForm() {
+  const { themePreference, setThemePreference } = useTheme();
+
   return (
     <section className="space-y-3">
       <div>
@@ -20,10 +18,10 @@ export function AppearanceForm({ value, onChange }: AppearanceFormProps) {
       </div>
       <ToggleGroup
         type="single"
-        value={value}
+        value={themePreference}
         onValueChange={nextValue => {
-          if (nextValue) {
-            onChange(nextValue as ThemePreference);
+          if (isThemePreference(nextValue)) {
+            setThemePreference(nextValue);
           }
         }}
       >

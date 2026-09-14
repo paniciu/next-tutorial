@@ -7,22 +7,18 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { mockConversations } from "@/lib/mock/conversations";
 import { mockProfile } from "@/lib/mock/profile";
 import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER_ID, providerModelOptions } from "@/lib/providers";
-import type { ConversationSummary, ResolvedTheme, ThemePreference, UserProfile } from "@/lib/types";
+import type { ConversationSummary, UserProfile } from "@/lib/types";
 
-const APP_STORE_VERSION = 2;
+const APP_STORE_VERSION = 3;
 const LEGACY_CHAT_MESSAGES_STORAGE_KEY = "skillforge-chat-messages";
 
 type AppState = {
   profile: UserProfile;
   selectedProvider: string;
   selectedModel: string;
-  themePreference: ThemePreference;
-  resolvedTheme: ResolvedTheme;
   hasHydrated: boolean;
   conversations: ConversationSummary[];
   activeConversationId: string;
-  setThemePreference: (theme: ThemePreference) => void;
-  setResolvedTheme: (theme: ResolvedTheme) => void;
   markHydrated: () => void;
   updateProfile: (patch: Partial<UserProfile>) => void;
   setProviderModel: (provider: string, model: string) => void;
@@ -132,13 +128,9 @@ export const useAppStore = create<AppState>()(
       profile: mockProfile,
       selectedProvider: DEFAULT_PROVIDER_ID,
       selectedModel: DEFAULT_MODEL_ID,
-      themePreference: "system",
-      resolvedTheme: "light",
       hasHydrated: false,
       conversations: mockConversations,
       activeConversationId: initialConversation.id,
-      setThemePreference: theme => set({ themePreference: theme }),
-      setResolvedTheme: theme => set({ resolvedTheme: theme }),
       markHydrated: () => set({ hasHydrated: true }),
       updateProfile: patch => set(state => ({ profile: { ...state.profile, ...patch } })),
       setProviderModel: (provider, model) => set({ selectedProvider: provider, selectedModel: model }),
@@ -255,7 +247,13 @@ export const useAppStore = create<AppState>()(
         }
 
         return {
-          ...legacyState,
+          profile:
+            legacyState.profile && typeof legacyState.profile === "object"
+              ? (legacyState.profile as UserProfile)
+              : mockProfile,
+          selectedProvider:
+            typeof legacyState.selectedProvider === "string" ? legacyState.selectedProvider : DEFAULT_PROVIDER_ID,
+          selectedModel: typeof legacyState.selectedModel === "string" ? legacyState.selectedModel : DEFAULT_MODEL_ID,
           conversations: migratedConversations.length > 0 ? migratedConversations : [fallbackConversation],
           activeConversationId:
             typeof legacyState.activeConversationId === "string" &&
@@ -283,7 +281,6 @@ export const useAppStore = create<AppState>()(
         profile: state.profile,
         selectedProvider: state.selectedProvider,
         selectedModel: state.selectedModel,
-        themePreference: state.themePreference,
         conversations: state.conversations,
         activeConversationId: state.activeConversationId
       })

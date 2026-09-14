@@ -40,13 +40,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const profile = useAppStore(state => state.profile);
   const selectedProvider = useAppStore(state => state.selectedProvider);
   const selectedModel = useAppStore(state => state.selectedModel);
-  const themePreference = useAppStore(state => state.themePreference);
-  const setThemePreference = useAppStore(state => state.setThemePreference);
   const setProviderModel = useAppStore(state => state.setProviderModel);
   const updateProfile = useAppStore(state => state.updateProfile);
 
   const sectionContentRegistry: Record<SettingsSection, ReactNode> = {
-    general: <AppearanceForm value={themePreference} onChange={setThemePreference} />,
+    general: <AppearanceForm />,
     profile: (
       <ProfileForm
         profile={profile}
