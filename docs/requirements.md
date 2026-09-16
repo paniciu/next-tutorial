@@ -1,6 +1,6 @@
 # SkillForge — cerințe de produs
 
-> Ultima actualizare: 2026-09-14
+> Ultima actualizare: 2026-09-16
 >
 > Faza curentă: Faza 1D — selecție provider (parțial livrată)
 
@@ -267,7 +267,8 @@ Profilul trebuie să poată include cel puțin:
 
 - rol curent;
 - stack actual;
-- skill-uri și nivel estimat pentru fiecare;
+- skill-uri ca listă structurată (nume + nivel estimat pentru fiecare);
+- notițe separate pentru skill-uri (observații, lacune, priorități);
 - obiectiv profesional principal;
 - eventuale constrângeri relevante de timp sau ritm de învățare.
 

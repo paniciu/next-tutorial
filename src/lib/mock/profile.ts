@@ -5,7 +5,13 @@ import { providerModelOptions } from "@/lib/providers";
 export const mockProfile: UserProfile = {
   name: "Andrei",
   currentStack: "Java + Spring Boot, SQL, puțin React",
-  skills: "java: avansat\nsql: intermediar\nreact: începător\nai fundamentals: începător",
+  skills: [
+    { id: "skill-java", name: "java", level: "avansat" },
+    { id: "skill-sql", name: "sql", level: "intermediar" },
+    { id: "skill-react", name: "react", level: "începător" },
+    { id: "skill-ai", name: "ai fundamentals", level: "începător" }
+  ],
+  skillNotes: "Vreau să urc rapid pe practică AI aplicată și proiecte publice.",
   objective: "Vreau să fac tranziția spre AI Engineer în 6 luni, cu proiecte publice pe GitHub."
 };
 

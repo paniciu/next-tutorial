@@ -33,6 +33,24 @@ function normalizeField(value: string) {
   return trimmed.length > 0 ? trimmed : fallbackField;
 }
 
+function normalizeProfileSkills(skills: UserProfile["skills"]) {
+  return skills
+    .map(skill => ({
+      id: skill.id,
+      name: skill.name.trim(),
+      level: skill.level
+    }))
+    .filter(skill => skill.name.length > 0);
+}
+
+function formatProfileSkills(skills: UserProfile["skills"]) {
+  if (skills.length === 0) {
+    return fallbackField;
+  }
+
+  return skills.map(skill => `${skill.name}: ${skill.level}`).join(" | ");
+}
+
 function roleToLabel(role: UIMessage["role"]) {
   if (role === "user") {
     return "Tu";
@@ -80,7 +98,8 @@ export function buildConversationExportPayload(
     profile: {
       name: normalizeField(profile.name),
       currentStack: normalizeField(profile.currentStack),
-      skills: normalizeField(profile.skills),
+      skills: normalizeProfileSkills(profile.skills),
+      skillNotes: normalizeField(profile.skillNotes),
       objective: normalizeField(profile.objective)
     },
     messages: messages.map(message => ({
@@ -119,7 +138,8 @@ export function serializeConversationExportMarkdown(
     "",
     `- Nume: ${payload.profile.name}`,
     `- Stack curent: ${payload.profile.currentStack}`,
-    `- Skills: ${payload.profile.skills}`,
+    `- Skills: ${formatProfileSkills(payload.profile.skills)}`,
+    `- Notes: ${payload.profile.skillNotes}`,
     `- Obiectiv: ${payload.profile.objective}`,
     "",
     "## Mesaje",

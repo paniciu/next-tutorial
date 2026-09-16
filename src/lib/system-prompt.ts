@@ -1,9 +1,17 @@
-import type { UserProfile } from "@/lib/types";
+import type { SkillLevel, UserProfile } from "@/lib/types";
 
 const MAX_NAME_LENGTH = 80;
 const MAX_STACK_LENGTH = 240;
-const MAX_SKILLS_LENGTH = 1200;
+const MAX_SKILL_NAME_LENGTH = 80;
+const MAX_SKILL_NOTES_LENGTH = 1200;
 const MAX_OBJECTIVE_LENGTH = 320;
+
+const SKILL_LEVEL_ALIASES: Record<string, SkillLevel> = {
+  incepator: "începător",
+  începător: "începător",
+  intermediar: "intermediar",
+  avansat: "avansat"
+};
 
 function sanitizeProfileField(value: unknown, maxLength: number, preserveNewLines = false) {
   if (typeof value !== "string") {
@@ -22,6 +30,14 @@ function sanitizeProfileField(value: unknown, maxLength: number, preserveNewLine
   return normalized.slice(0, maxLength);
 }
 
+function sanitizeSkillLevel(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  return SKILL_LEVEL_ALIASES[value.trim().toLowerCase()] ?? null;
+}
+
 function normalizeProfileForPrompt(rawProfile: unknown): Partial<UserProfile> {
   if (!rawProfile || typeof rawProfile !== "object") {
     return {};
@@ -30,10 +46,35 @@ function normalizeProfileForPrompt(rawProfile: unknown): Partial<UserProfile> {
   const record = rawProfile as Record<string, unknown>;
 
   // De ce: whitelist-ul de câmpuri oprește includerea accidentală a altor proprietăți în system prompt.
+  const normalizedSkills = Array.isArray(record.skills)
+    ? record.skills
+        .map(skill => {
+          if (!skill || typeof skill !== "object") {
+            return null;
+          }
+
+          const skillRecord = skill as Record<string, unknown>;
+          const name = sanitizeProfileField(skillRecord.name, MAX_SKILL_NAME_LENGTH);
+          const level = sanitizeSkillLevel(skillRecord.level);
+
+          if (!name || !level) {
+            return null;
+          }
+
+          return {
+            id: sanitizeProfileField(skillRecord.id, MAX_NAME_LENGTH) || "skill",
+            name,
+            level
+          };
+        })
+        .filter(Boolean)
+    : [];
+
   return {
     name: sanitizeProfileField(record.name, MAX_NAME_LENGTH),
     currentStack: sanitizeProfileField(record.currentStack, MAX_STACK_LENGTH),
-    skills: sanitizeProfileField(record.skills, MAX_SKILLS_LENGTH, true),
+    skills: normalizedSkills,
+    skillNotes: sanitizeProfileField(record.skillNotes, MAX_SKILL_NOTES_LENGTH, true),
     objective: sanitizeProfileField(record.objective, MAX_OBJECTIVE_LENGTH)
   };
 }
@@ -41,7 +82,11 @@ function normalizeProfileForPrompt(rawProfile: unknown): Partial<UserProfile> {
 function formatProfileSection(profile: Partial<UserProfile>) {
   const name = profile.name || "(necompletat)";
   const currentStack = profile.currentStack || "(necompletat)";
-  const skills = profile.skills || "(necompletat)";
+  const skills =
+    profile.skills && profile.skills.length > 0
+      ? profile.skills.map(skill => `${skill.name}: ${skill.level}`).join(", ")
+      : "(necompletat)";
+  const skillNotes = profile.skillNotes || "(fără notițe)";
   const objective = profile.objective || "(necompletat)";
 
   return [
@@ -51,6 +96,7 @@ function formatProfileSection(profile: Partial<UserProfile>) {
     `- Nume: ${name}`,
     `- Stack curent: ${currentStack}`,
     `- Skill-uri și nivel: ${skills}`,
+    `- Note skill-uri: ${skillNotes}`,
     `- Obiectiv: ${objective}`,
     "DATE_UTILIZATOR_END"
   ].join("\n");

@@ -12,10 +12,17 @@ export type SettingsSection = "general" | "profile" | "providers" | "about";
 
 export type ChatRole = "user" | "assistant";
 
+export type ProfileSkill = {
+  id: string;
+  name: string;
+  level: SkillLevel;
+};
+
 export type UserProfile = {
   name: string;
   currentStack: string;
-  skills: string;
+  skills: ProfileSkill[];
+  skillNotes: string;
   objective: string;
 };
 

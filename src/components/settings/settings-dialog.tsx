@@ -90,13 +90,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[680px] max-h-[90svh] max-w-4xl p-0 sm:max-w-4xl" showCloseButton>
+      <DialogContent
+        className="h-[680px] max-h-[90svh] max-w-4xl gap-0 overflow-hidden p-0 sm:max-w-4xl"
+        showCloseButton
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>Preferințe SkillForge</DialogTitle>
           <DialogDescription>Gestionează profilul, tema și providerul activ.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid h-full grid-cols-1 md:grid-cols-[240px_1fr]">
+        <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[240px_1fr]">
           <aside className="border-r bg-muted/30 p-4">
             <p className="mb-3 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Settings</p>
             <nav className="space-y-1">
@@ -120,14 +123,22 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </nav>
           </aside>
 
-          <section className="flex h-full min-h-0 flex-col">
+          <section className="flex h-full min-h-0 flex-col overflow-hidden">
             <div className="p-5 pb-4">
               <h2 className="text-base font-semibold">
                 {settingsRegistry.find(item => item.id === activeSection)?.label}
               </h2>
             </div>
             <Separator />
-            <div className="min-h-0 flex-1 overflow-hidden p-5">{sectionContentRegistry[activeSection]}</div>
+            <div
+              className={
+                activeSection === "profile"
+                  ? "min-h-0 flex-1 overflow-hidden px-5 pt-5 pb-0"
+                  : "min-h-0 flex-1 overflow-y-auto p-5"
+              }
+            >
+              {sectionContentRegistry[activeSection]}
+            </div>
           </section>
         </div>
       </DialogContent>
