@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { UIMessage } from "ai";
 
 import { ChatInput } from "@/components/chat/chat-input";
 import { EmptyState } from "@/components/chat/empty-state";
 import { MessageList } from "@/components/chat/message-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { calculateConversationBilledCost, formatUsd } from "@/lib/cost";
 import { DEFAULT_MODEL_ID, PROVIDER_REGISTRY } from "@/lib/providers";
-import type { ProviderId } from "@/lib/types";
+import type { ChatMessage, ProviderId } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
 
 type ChatProps = {
-  messages: UIMessage[];
+  messages: ChatMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   error: string | null;
   onSendMessage: (content: string) => Promise<void>;
@@ -47,6 +47,8 @@ export function Chat({
   const setProviderModel = useAppStore(state => state.setProviderModel);
 
   const isAssistantTyping = status === "submitted" || status === "streaming";
+  const conversationCostUsd = calculateConversationBilledCost(messages);
+  const conversationCostLabel = formatUsd(conversationCostUsd);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -104,6 +106,7 @@ export function Chat({
               isTyping={isAssistantTyping}
               providerLabel={providerLabel}
               modelLabel={modelLabel}
+              conversationCostLabel={conversationCostLabel}
               focusKey={`${activeConversationId}-${status}`}
               selectedProviderId={selectedProvider as ProviderId}
               selectedModelId={selectedModel}
@@ -129,6 +132,7 @@ export function Chat({
               isTyping={isAssistantTyping}
               providerLabel={providerLabel}
               modelLabel={modelLabel}
+              conversationCostLabel={conversationCostLabel}
               focusKey={`${activeConversationId}-${status}`}
               selectedProviderId={selectedProvider as ProviderId}
               selectedModelId={selectedModel}

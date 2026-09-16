@@ -55,6 +55,10 @@
 - The chat input sends `providerId` and `modelId` with each message; the server validates both before calling `getModel()`.
 - A provider missing a configured key returns a clear 400 error (not 503 or 500), e.g.: "Provider OpenAI not configured: OPENAI_API_KEY is not set."
 - No if-statements on `providerId` exist outside `providers.server.ts`. All routing between providers happens in the switch inside `getModel()`.
+- Cost formula is centralized in one place only: `src/lib/cost.ts`.
+- Provider pricing is stored in `src/lib/providers.ts` per model as input/output per 1M tokens, with explicit `checkedAt` date.
+- Cache access is allowed only through `src/lib/cache.ts` using `get` / `set`.
+- Cache key must include all response-affecting inputs, including provider, model, system prompt, and message hash.
 
 **Rationale**: This pattern ensures adding a second provider touches exactly one production file (`providers.server.ts`), not chat-input, settings, or routes. The registry drives the UI; abstraction scales to N providers with linear cost.
 

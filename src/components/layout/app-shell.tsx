@@ -16,7 +16,7 @@ import {
   serializeConversationExportMarkdown
 } from "@/lib/message-utils";
 import { getProviderModelLabel } from "@/lib/providers";
-import type { ConversationSummary, ProviderId } from "@/lib/types";
+import type { ChatMessage, ConversationSummary, ProviderId } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
 
 function toFileSafeIso(date: Date) {
@@ -38,6 +38,14 @@ function downloadInBrowser(fileName: string, content: string, mimeType: string) 
   window.setTimeout(() => {
     URL.revokeObjectURL(objectUrl);
   }, 0);
+}
+
+function parseChatError(error: unknown) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return "Nu am putut genera răspunsul acum. Încearcă din nou.";
 }
 
 type ConversationSessionProps = {
@@ -86,7 +94,7 @@ function ConversationSession({ activeConversation }: ConversationSessionProps) {
     fetchProviderStatus();
   }, []);
 
-  const { messages, sendMessage, stop, status, error, regenerate, setMessages } = useChat({
+  const { messages, sendMessage, stop, status, error, regenerate, setMessages } = useChat<ChatMessage>({
     id: activeConversation.id,
     messages: activeConversation.messages,
     transport: new DefaultChatTransport({
@@ -96,10 +104,29 @@ function ConversationSession({ activeConversation }: ConversationSessionProps) {
         const state = useAppStore.getState();
 
         return {
-          selectedProvider: state.selectedProvider,
-          selectedModel: state.selectedModel,
+          providerId: state.selectedProvider,
+          modelId: state.selectedModel,
           profile: state.profile
         };
+      },
+      fetch: async (input, init) => {
+        const response = await fetch(input, init);
+        if (response.ok) {
+          return response;
+        }
+
+        let serverMessage = `Cererea a eșuat (${response.status}).`;
+
+        try {
+          const payload = (await response.clone().json()) as { error?: string; retryAt?: string };
+          if (payload?.error) {
+            serverMessage = payload.error;
+          }
+        } catch {
+          // Ignor: dacă răspunsul nu e JSON, păstrăm mesajul fallback.
+        }
+
+        throw new Error(serverMessage);
       }
     }),
     onFinish: ({ messages: finishedMessages }) => {
@@ -118,9 +145,7 @@ function ConversationSession({ activeConversation }: ConversationSessionProps) {
   });
 
   const isAssistantTyping = status === "submitted" || status === "streaming";
-  const chatError = error
-    ? "Nu am putut genera răspunsul acum. Dacă providerul nu e configurat încă, aplicația rămâne funcțională, dar chat-ul va porni după ce setezi variabilele în platforma de deploy și faci redeploy."
-    : null;
+  const chatError = error ? parseChatError(error) : null;
 
   const selectedProviderLabel = useMemo(() => {
     const fullLabel = getProviderModelLabel(selectedProvider, selectedModel);
@@ -167,7 +192,7 @@ function ConversationSession({ activeConversation }: ConversationSessionProps) {
 
     try {
       touchConversation(activeConversation.id);
-      await regenerate();
+      await regenerate({ body: { bypassCache: true } });
     } catch {
       toast.error("Reluarea a eșuat. Încearcă din nou.");
     }

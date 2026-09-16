@@ -1,13 +1,12 @@
 "use client";
 
-import type { UIMessage } from "ai";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { mockConversations } from "@/lib/mock/conversations";
 import { mockProfile } from "@/lib/mock/profile";
 import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER_ID, providerModelOptions } from "@/lib/providers";
-import type { ConversationSummary, ProfileSkill, SkillLevel, UserProfile } from "@/lib/types";
+import type { ChatMessage, ConversationSummary, ProfileSkill, SkillLevel, UserProfile } from "@/lib/types";
 
 const APP_STORE_VERSION = 4;
 const LEGACY_CHAT_MESSAGES_STORAGE_KEY = "skillforge-chat-messages";
@@ -24,7 +23,7 @@ type AppState = {
   setProviderModel: (provider: string, model: string) => void;
   setActiveConversation: (conversationId: string) => void;
   touchConversation: (conversationId: string, titleHint?: string) => void;
-  archiveConversationMessages: (conversationId: string, messages: UIMessage[], titleHint?: string) => void;
+  archiveConversationMessages: (conversationId: string, messages: ChatMessage[], titleHint?: string) => void;
   renameConversation: (conversationId: string, title: string) => void;
   deleteConversation: (conversationId: string) => void;
   startNewConversation: () => void;
@@ -173,29 +172,29 @@ function normalizeProfileRecord(rawProfile: unknown): UserProfile {
 
 function readLegacyMessageArchive() {
   if (typeof window === "undefined") {
-    return {} as Record<string, UIMessage[]>;
+    return {} as Record<string, ChatMessage[]>;
   }
 
   try {
     const raw = window.localStorage.getItem(LEGACY_CHAT_MESSAGES_STORAGE_KEY);
     if (!raw) {
-      return {} as Record<string, UIMessage[]>;
+      return {} as Record<string, ChatMessage[]>;
     }
 
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== "object") {
-      return {} as Record<string, UIMessage[]>;
+      return {} as Record<string, ChatMessage[]>;
     }
 
-    return parsed as Record<string, UIMessage[]>;
+    return parsed as Record<string, ChatMessage[]>;
   } catch {
-    return {} as Record<string, UIMessage[]>;
+    return {} as Record<string, ChatMessage[]>;
   }
 }
 
 function normalizeConversationRecord(
   conversation: PersistedConversationV2,
-  legacyMessages: Record<string, UIMessage[]>
+  legacyMessages: Record<string, ChatMessage[]>
 ) {
   const id =
     typeof conversation.id === "string" && conversation.id.trim().length > 0 ? conversation.id : makeId("conv");
@@ -209,7 +208,7 @@ function normalizeConversationRecord(
       : createdAt;
   const title =
     typeof conversation.title === "string" && conversation.title.trim().length > 0 ? conversation.title : defaultTitle;
-  const messageFromV2 = Array.isArray(conversation.messages) ? (conversation.messages as UIMessage[]) : null;
+  const messageFromV2 = Array.isArray(conversation.messages) ? (conversation.messages as ChatMessage[]) : null;
   const messageFromLegacyStorage = legacyMessages[id] ?? [];
 
   return {

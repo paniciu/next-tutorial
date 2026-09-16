@@ -47,16 +47,20 @@ De obicei redeployment durează 1–2 minute.
 | ------------- | --------------------------------- | ------------------------------ |
 | `gpt-4o-mini` | Mic, rapid, ieftin; versiune QPU. | Răspunsuri rapide, cu context. |
 
-## Cost
+## Cost & limite
 
-Verific prețurile curente la https://openai.com/api/pricing:
+Prețuri verificate la **2026-09-16** (sursă: https://openai.com/api/pricing):
 
-- **Input**: ~$0.15/1M tokens
-- **Output**: ~$0.60/1M tokens
+- Model folosit în aplicație: `gpt-4o-mini`
+- **Input**: **$0.15 / 1M tokens**
+- **Output**: **$0.60 / 1M tokens**
 
-(Prețurile din noiembrie 2026; actualizează-le din link-ul oficial.)
+În SkillForge costul se calculează din `usage` raportat de provider (input/output), nu prin estimare locală.
 
-Pentru curse și prototipuri, costul este neglijabil. Pentru producție cu mulți utilizatori, monitorizează utilizarea în OpenAI Usage panel.
+Limite relevante:
+
+- Rate limits OpenAI depind de plan și tier (vezi dashboard-ul contului).
+- Aplicația mai are și o limită internă de bun-simț: **10 cereri/minut/IP** pe ruta de chat.
 
 ## Verificare
 

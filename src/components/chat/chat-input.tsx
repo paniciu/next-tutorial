@@ -16,6 +16,7 @@ type ChatInputProps = {
   isTyping: boolean;
   providerLabel: string;
   modelLabel: string;
+  conversationCostLabel: string;
   focusKey: string;
   selectedProviderId: ProviderId;
   selectedModelId: string;
@@ -33,6 +34,7 @@ export function ChatInput({
   isTyping,
   providerLabel,
   modelLabel,
+  conversationCostLabel,
   focusKey,
   selectedProviderId,
   selectedModelId,
@@ -96,6 +98,7 @@ export function ChatInput({
           <div className="flex items-center gap-2">
             <p className="text-xs text-muted-foreground">
               {providerLabel} · {modelLabel}
+              <span className="ml-2">Cost conversație: {conversationCostLabel}</span>
             </p>
             <Button type="button" size="sm" onClick={isTyping ? onStop : onSubmit}>
               {isTyping ? <Square className="size-3.5" /> : <Send className="size-3.5" />}

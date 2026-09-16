@@ -32,10 +32,13 @@
 
 ## 5. Cost & limite
 
-- Plan gratuit disponibil: verifică oferta curentă direct în Anthropic Console.
-- Rate limits relevante: depind de plan și de limitele contului/proiectului.
-- Ce se plătește efectiv: tokenii procesați (input/output), în funcție de model.
-- Ce risc de cost trebuie urmărit: streaming frecvent, prompturi foarte lungi și sesiuni extinse.
+- Model folosit în aplicație: `claude-haiku-4-5`.
+- Preț verificat la: **2026-09-16** (sursă: pagina oficială Anthropic pricing).
+- Input: **$0.80 / 1M tokens**.
+- Output: **$4.00 / 1M tokens**.
+- Ce se plătește efectiv: tokenii de intrare + ieșire raportați de provider în `usage`.
+- Rate limits relevante: depind de plan și de tier-ul contului Anthropic; în aplicație există și limită internă de bun-simț (**10 cereri/minut/IP** pe ruta de chat).
+- Ce risc de cost trebuie urmărit: creșterea tokenilor de intrare din istoricul retrimis la fiecare mesaj.
 
 Link oficial pricing: https://www.anthropic.com/pricing
 

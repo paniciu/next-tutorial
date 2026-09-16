@@ -2,7 +2,7 @@
 
 > Ultima actualizare: 2026-09-16
 >
-> Faza curentă: Faza 1D — selecție provider (parțial livrată)
+> Faza curentă: Faza 1E — cost vizibil + protecții retrimiteri (livrată)
 
 ## 1. Rolul acestui document
 
@@ -189,7 +189,27 @@ Selectorul de provider și model: utilizatorul poate alege cu ce AI răspunde ap
 
 Intră: comutare Claude ↔ GPT-4o Mini pe mesaj; provider-ul dezactivat apare cu motiv; abstracție prin `getModel()` pe server (SDK-ul instanțiat doar acolo); validare modelId contra registrului.
 
-Nu intră: tracking cost/tokeni; comparație modele; prețuri.
+Nu intră: comparație automată de calitate între modele; optimizare automată de context.
+
+#### Faza 1E — cost vizibil + cache de protecție + rate limiting (livrată 2026-09-16)
+
+Intră în 1E:
+
+- citirea tokenilor reali din `usage` în `onFinish` (input/output/total), fără estimări manuale;
+- afișare per răspuns a tokenilor + costului discret, cu fallback `—` când providerul nu raportează un câmp;
+- prețuri per model în registrul providerelor (input/output per milion) + `checkedAt` (data verificării);
+- formulă unică de cost în `src/lib/cost.ts`, reutilizată per mesaj și total conversație;
+- cost salvat în metadatele mesajului împreună cu `providerId` + `modelId`;
+- cache în memorie prin interfață minimă `get`/`set` în `src/lib/cache.ts`, cu TTL + limită de intrări;
+- cheie cache: provider + model + system prompt + hash mesaje;
+- replay de răspuns cache-uit în format streaming + marcaj UI „din cache";
+- bypass cache la „Mai încearcă", astfel încât reluarea să cheme modelul real;
+- rate limiting simplu în ruta de chat (cereri/minut), răspuns `429` și mesaj clar cu momentul de retry.
+
+Limită explicită de fază:
+
+- cache-ul de acest pas nu e mecanism principal de optimizare de cost în producție; este protecție pentru retrimiteri identice.
+- pentru că profilul intră în system prompt, doi utilizatori diferiți nu împart aceeași cheie de cache.
 
 Fișiere noi: `src/lib/providers.server.ts` (funcții server-side cu SDK); `src/components/chat/provider-selector.tsx`; `src/app/api/providers/route.ts` (status endpoint). Modificate: `chat-input.tsx`, `chat.tsx`, `app-shell.tsx`, `app.api.chat.route.ts`, `providers.ts`.
 
@@ -377,12 +397,18 @@ Limită de fază și risc acceptat (explicit):
 - această strategie local-first rămâne valabilă până la introducerea autentificării + stocării server-side (planificat în Faza 4);
 - riscul este considerat acceptabil temporar deoarece datele rămân pe dispozitivul utilizatorului, câmpurile sunt limitate la minimul necesar pentru personalizare, iar utilizatorul are control direct de ștergere.
 
-### 11.3 Cost și portabilitate între provideri
+### 11.3 Cost măsurat și portabilitate între provideri
 
 - Providerul LLM trebuie să fie schimbabil.
-- Trebuie să existe loc în documentație pentru costurile fiecărei integrări externe.
-- Când se adaugă un provider, trebuie documentate: modelul de tarifare, unitatea de cost relevantă, eventualele limite gratuite și linkul spre pagina oficială de pricing.
-- Nu se hardcodează dependența conceptuală de un singur furnizor.
+- Costul per răspuns se calculează numai din `usage` raportat de provider (input/output), nu din estimări locale.
+- Când un câmp de usage lipsește, UI afișează `—` (necunoscut), nu `0`.
+- Prețurile per model sunt în registrul providerelor, ca input/output per 1.000.000 tokeni, cu data verificării (`checkedAt`).
+- Formula de cost există într-un singur fișier (`src/lib/cost.ts`) și este reutilizată de toate afișările de cost.
+- Costul și modelul/providerul folosit se păstrează în metadatele mesajului, pentru total corect în conversații cu provider comutat.
+- Totalul conversației afișează suma costurilor facturabile pe mesaje (răspunsurile din cache au cost nou `0`).
+- Cache-ul se accesează doar prin `src/lib/cache.ts`, iar cheia include toate intrările care influențează răspunsul (inclusiv system prompt).
+- Rate limiting-ul din memoria procesului este doar protecție operațională de bază; în multi-instancing nu oferă garanții de securitate.
+- Documentația pentru fiecare provider trebuie să păstreze prețuri + data verificării + limite relevante de cereri/minut.
 
 ### 11.4 Calitate de produs
 

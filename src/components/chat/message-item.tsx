@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { UIMessage } from "ai";
 import { Copy, Edit2, RefreshCcw, Send, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MarkdownRenderer } from "@/components/chat/markdown";
+import { formatTokenCount, formatUsd } from "@/lib/cost";
 import { extractMessageText } from "@/lib/message-utils";
+import type { ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type MessageItemProps = {
-  message: UIMessage;
+  message: ChatMessage;
   onRegenerate: (messageId: string) => Promise<void>;
   onEditAndResend: (messageId: string, newContent: string) => Promise<void>;
   canRegenerate: boolean;
@@ -43,6 +44,8 @@ export function MessageItem({
     Boolean(navigator.clipboard?.writeText);
 
   const canShowRegenerate = message.role === "assistant" && isLastAssistant;
+  const metadata = message.metadata;
+  const cost = metadata?.cost;
 
   const handleEdit = async () => {
     const trimmed = editValue.trim();
@@ -121,6 +124,22 @@ export function MessageItem({
         ) : (
           <>
             {isUser ? <p className="whitespace-pre-wrap">{textContent}</p> : <MarkdownRenderer content={textContent} />}
+
+            {!isUser && cost ? (
+              <div className="mt-3 space-y-1 border-t pt-2 text-[11px] text-muted-foreground">
+                <p>
+                  Intrare (include istoric retrimis): {formatTokenCount(metadata?.usage.inputTokens)} tokeni ·{" "}
+                  {formatUsd(cost.inputCostUsd)}
+                </p>
+                <p>
+                  Ieșire: {formatTokenCount(metadata?.usage.outputTokens)} tokeni · {formatUsd(cost.outputCostUsd)}
+                </p>
+                <p>
+                  Total răspuns: {formatUsd(cost.billedCostUsd)}
+                  {metadata?.fromCache ? " · din cache (fără cost nou)" : ""}
+                </p>
+              </div>
+            ) : null}
           </>
         )}
 

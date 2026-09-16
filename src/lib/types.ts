@@ -32,10 +32,44 @@ export type ProviderModelOption = {
   label: string;
 };
 
+export type ModelPricing = {
+  inputPerMillionUsd: number;
+  outputPerMillionUsd: number;
+  checkedAt: string;
+};
+
+export type UsageSnapshot = {
+  inputTokens: number | undefined;
+  outputTokens: number | undefined;
+  totalTokens: number | undefined;
+};
+
+export type MessageCostSnapshot = {
+  inputCostUsd: number | undefined;
+  outputCostUsd: number | undefined;
+  totalCostUsd: number | undefined;
+  billedCostUsd: number | undefined;
+  pricingCheckedAt: string | undefined;
+};
+
+export type ChatMessageMetadata = {
+  providerId: ProviderId;
+  modelId: string;
+  fromCache: boolean;
+  usage: UsageSnapshot;
+  // De ce: input tokenii includ atât întrebarea nouă, cât și istoricul retrimis modelului.
+  // Marcăm explicit acest fapt ca utilizatorul să vadă unde se duce costul.
+  inputIncludesHistory: true;
+  cost: MessageCostSnapshot;
+  retryAfterIso?: string;
+};
+
+export type ChatMessage = UIMessage<ChatMessageMetadata>;
+
 export type ConversationSummary = {
   id: string;
   title: string;
   createdAt: string;
   updatedAt: string;
-  messages: UIMessage[];
+  messages: ChatMessage[];
 };

@@ -1,6 +1,4 @@
-import type { UIMessage } from "ai";
-
-import type { UserProfile } from "@/lib/types";
+import type { ChatMessage, UserProfile } from "@/lib/types";
 
 type ConversationExportMetadata = {
   conversationId: string;
@@ -10,7 +8,7 @@ type ConversationExportMetadata = {
 
 export type ExportMessage = {
   id: string;
-  role: UIMessage["role"];
+  role: ChatMessage["role"];
   text: string;
 };
 
@@ -51,7 +49,7 @@ function formatProfileSkills(skills: UserProfile["skills"]) {
   return skills.map(skill => `${skill.name}: ${skill.level}`).join(" | ");
 }
 
-function roleToLabel(role: UIMessage["role"]) {
+function roleToLabel(role: ChatMessage["role"]) {
   if (role === "user") {
     return "Tu";
   }
@@ -64,7 +62,7 @@ function roleToLabel(role: UIMessage["role"]) {
 }
 
 // De ce: extragerea textului din mesaj există într-un singur loc ca să evităm reguli duplicate între UI și export.
-export function extractMessageText(message: UIMessage) {
+export function extractMessageText(message: ChatMessage) {
   // De ce: `parts` poate fi undefined dacă mesajul e creat fără el.
   // Cădem înapoi la proprietate `text` care s-ar putea afla pe mesaj.
   if (!message.parts) {
@@ -85,7 +83,7 @@ export function extractMessageText(message: UIMessage) {
 
 // De ce: această structură intermediară devine sursa comună pentru toate exporturile și păstrează aceeași semnificație a datelor.
 export function buildConversationExportPayload(
-  messages: UIMessage[],
+  messages: ChatMessage[],
   profile: UserProfile,
   metadata: ConversationExportMetadata
 ): ConversationExportPayload {
@@ -111,7 +109,7 @@ export function buildConversationExportPayload(
 }
 
 export function serializeConversationExportJson(
-  messages: UIMessage[],
+  messages: ChatMessage[],
   profile: UserProfile,
   metadata: ConversationExportMetadata
 ) {
@@ -121,7 +119,7 @@ export function serializeConversationExportJson(
 }
 
 export function serializeConversationExportMarkdown(
-  messages: UIMessage[],
+  messages: ChatMessage[],
   profile: UserProfile,
   metadata: ConversationExportMetadata
 ) {
@@ -158,7 +156,7 @@ export function serializeConversationExportMarkdown(
 
 // De ce: când utilizatorul editează un mesaj, tăiem conversația de la acel mesaj în jos.
 // Aceasta previne contradicțiile istorice și asigură că modelul primește un context coerent.
-export function trimMessagesAfterIndex(messages: UIMessage[], messageId: string): UIMessage[] {
+export function trimMessagesAfterIndex(messages: ChatMessage[], messageId: string): ChatMessage[] {
   const index = messages.findIndex(m => m.id === messageId);
   if (index === -1) {
     return messages;
