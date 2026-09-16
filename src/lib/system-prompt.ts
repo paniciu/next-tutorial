@@ -1,4 +1,4 @@
-import type { SkillLevel, UserProfile } from "@/lib/types";
+import type { ProfileSkill, SkillLevel, UserProfile } from "@/lib/types";
 
 const MAX_NAME_LENGTH = 80;
 const MAX_STACK_LENGTH = 240;
@@ -38,6 +38,10 @@ function sanitizeSkillLevel(value: unknown) {
   return SKILL_LEVEL_ALIASES[value.trim().toLowerCase()] ?? null;
 }
 
+function isProfileSkill(value: ProfileSkill | null): value is ProfileSkill {
+  return value !== null;
+}
+
 function normalizeProfileForPrompt(rawProfile: unknown): Partial<UserProfile> {
   if (!rawProfile || typeof rawProfile !== "object") {
     return {};
@@ -46,7 +50,7 @@ function normalizeProfileForPrompt(rawProfile: unknown): Partial<UserProfile> {
   const record = rawProfile as Record<string, unknown>;
 
   // De ce: whitelist-ul de câmpuri oprește includerea accidentală a altor proprietăți în system prompt.
-  const normalizedSkills = Array.isArray(record.skills)
+  const normalizedSkills: ProfileSkill[] = Array.isArray(record.skills)
     ? record.skills
         .map(skill => {
           if (!skill || typeof skill !== "object") {
@@ -65,9 +69,9 @@ function normalizeProfileForPrompt(rawProfile: unknown): Partial<UserProfile> {
             id: sanitizeProfileField(skillRecord.id, MAX_NAME_LENGTH) || "skill",
             name,
             level
-          };
+          } satisfies ProfileSkill;
         })
-        .filter(Boolean)
+        .filter(isProfileSkill)
     : [];
 
   return {
